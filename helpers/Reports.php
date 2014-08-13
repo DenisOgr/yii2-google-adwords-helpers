@@ -7,7 +7,6 @@
 
 namespace gah\helpers;
 
-
 class Reports {
 
 } 
