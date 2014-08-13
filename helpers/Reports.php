@@ -5,7 +5,7 @@
  * Time: 11:38
  */
 
-namespace gah\helpers;
+namespace denisog\gah\helpers;
 
 class Reports {
 
@@ -25,7 +25,7 @@ class Reports {
         unset($result[count($result)-1], $result[0],$result[1]);
         if (!empty($result)) {
             foreach ($result as $key => $value) {
-                $newResult[] = Rating::renameKeys($value, $fields);
+                $newResult[] = self::renameKeys($value, $fields);
             }
             $result = $newResult;
         }
