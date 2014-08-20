@@ -3,7 +3,6 @@
 /**
  * @author Konstantin Shevchenko <koshevchenko@gmail.com>
  */
-
 namespace denisog\gah\helpers;
 
 class Phrases {
@@ -45,7 +44,7 @@ class Phrases {
 	}
 
     public static function GetManualPhrases($manual_phrase=''){
-        global $phrases;
+
         $words_arr = array();
 
         $brackets1 = array('[', '{', '(', '<', "'", '"');
@@ -65,7 +64,7 @@ class Phrases {
 
         $phrases = Phrases::GetPhrase_no_google3($param_array, $words_arr, $brackets1, $brackets2);
 		$phrases = Phrases::DeleteNotValidPhrases($phrases);
-		
+
 		//sort($phrases);
 		usort($phrases, array('phrasesHelper', 'cmp'));
 		$phrases = array_slice($phrases, 0, 10000);
@@ -104,7 +103,7 @@ class Phrases {
 
 	public static function GetPhrasesWithPlus($words=array()){
         $words_with_plus = array();
-		
+
 		for($i=0;$i<count($words);$i++){
 			$tmp_word = '+'.str_replace(' ', ' +', trim($words[$i]));
 			if(strlen($tmp_word) > 0 && strlen($tmp_word) <= 80){
@@ -118,7 +117,7 @@ class Phrases {
         $words_with_sugar = array();
 
         $sugar = Phrases::GetSugar();
-		
+
 		foreach($sugar as $k => $v){
             $tmp_words = array();
 
@@ -297,7 +296,7 @@ class Phrases {
                     }
                 }elseif($wVal['key'] == "("){ //если ()
                     $words_count = 0;
-			
+
                     foreach($wValArr AS $wK=>$wV){
                         if(in_array($wV, $origin_arr) && strpos($v, $wV) !== FALSE){
                             $words_count++;
@@ -322,13 +321,13 @@ class Phrases {
                 }
             }
         }
-		
+
 		foreach($words_arr as $wId=>$wVal){
             foreach($all_ph as $k=>$v){
 				$v = str_replace('_', ' ', $v);
 				$v = trim(preg_replace('/[\s]+/', ' ', $v));
 				$all_ph[$k] = $v;
-			
+
                 $origin_arr = explode(' ', $v);
 
                 $wVal['word'] = str_replace($brackets1, ' ', $wVal['word']);
