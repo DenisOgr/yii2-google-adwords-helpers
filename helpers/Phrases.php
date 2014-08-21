@@ -38,13 +38,17 @@ class Phrases{
         $c = count($all_bad_ph);
         return $c;
     }
+
     public static function GetCountValidPhrases(){
         global $phrases;
         $c = count($phrases);
         return $c;
     }
+
     public static function GetManualPhrases($manual_phrase=''){
-        global $phrases;
+
+       // global $phrases;
+
         $words_arr = array();
 
         $brackets1 = array('[', '{', '(', '<', "'", '"');
@@ -81,6 +85,7 @@ class Phrases{
             return -1;
         }
     }
+
     public static function DeleteNotValidPhrases($phrases=array()){
         global $all_bad_ph;
         foreach($phrases as $k=>$v){
@@ -92,12 +97,14 @@ class Phrases{
         }
         return $phrases;
     }
+
     public static function GetPhrasesWithPlusAndSugar($phrases=array()){
         $phrases_with_plus = Phrases::GetPhrasesWithPlus($phrases);
         $phrases_with_sugar = Phrases::GetPhrasesWithSugar($phrases_with_plus, $phrases);
 
         return $phrases_with_sugar;
     }
+
     public static function GetPhrasesWithPlus($words=array()){
         $words_with_plus = array();
 
@@ -110,6 +117,7 @@ class Phrases{
 
         return $words_with_plus;
     }
+
     public static function GetPhrasesWithSugar($words_with_plus=array(), $words=array()){
         $words_with_sugar = array();
 
@@ -180,6 +188,7 @@ class Phrases{
 
         return $words_with_sugar;
     }
+
     public static function GetPhrase_no_google3($words=array(), $words_arr=array(), $brackets1=array(), $brackets2=array()){
         global $all_ph;
 
