@@ -5,7 +5,8 @@
  */
 namespace denisog\gah\helpers;
 
-class Phrases {
+class Phrases{
+
     public static function phrase($ph1, $words, $i){
         global $all_ph, $all_bad_ph;
 
@@ -25,26 +26,25 @@ class Phrases {
             }
         }
     }
-	public static function GetCountManualPhrases(){
-		global $all_ph;
-		$c = count($all_ph);
-		return $c;
-	}
 
-	public static function GetCountBadPhrases(){
-		global $all_bad_ph;
-		$c = count($all_bad_ph);
-		return $c;
-	}
+    public static function GetCountManualPhrases(){
+        global $all_ph;
+        $c = count($all_ph);
+        return $c;
+    }
 
-	public static function GetCountValidPhrases(){
-		global $phrases;
-		$c = count($phrases);
-		return $c;
-	}
-
+    public static function GetCountBadPhrases(){
+        global $all_bad_ph;
+        $c = count($all_bad_ph);
+        return $c;
+    }
+    public static function GetCountValidPhrases(){
+        global $phrases;
+        $c = count($phrases);
+        return $c;
+    }
     public static function GetManualPhrases($manual_phrase=''){
-
+        global $phrases;
         $words_arr = array();
 
         $brackets1 = array('[', '{', '(', '<', "'", '"');
@@ -63,62 +63,59 @@ class Phrases {
         $param_array = explode(' ', $param);
 
         $phrases = Phrases::GetPhrase_no_google3($param_array, $words_arr, $brackets1, $brackets2);
-		$phrases = Phrases::DeleteNotValidPhrases($phrases);
+        $phrases = Phrases::DeleteNotValidPhrases($phrases);
 
-		//sort($phrases);
-		usort($phrases, array('phrasesHelper', 'cmp'));
-		$phrases = array_slice($phrases, 0, 10000);
+        //sort($phrases);
+        usort($phrases, ['denisog\gah\helpers\Phrases', 'cmp']);
+        $phrases = array_slice($phrases, 0, 10000);
 
         return $phrases;
     }
 
-	public static function cmp($a, $b) {
-		if (strlen($a) > strlen($b)){
-			return 1;
-		}else if (strlen($a) == strlen($b)){
-			return 0;
-		}else{
-			return -1;
-		}
-	}
-
-	public static function DeleteNotValidPhrases($phrases=array()){
-		global $all_bad_ph;
-		foreach($phrases as $k=>$v){
+    public static function cmp($a, $b) {
+        if (strlen($a) > strlen($b)){
+            return 1;
+        }else if (strlen($a) == strlen($b)){
+            return 0;
+        }else{
+            return -1;
+        }
+    }
+    public static function DeleteNotValidPhrases($phrases=array()){
+        global $all_bad_ph;
+        foreach($phrases as $k=>$v){
             $v_arr = explode(' ', $v);
             if(strlen($v) >= 80 || count($v_arr) > 6){
                 $all_bad_ph[] = $v;
-				unset($phrases[$k]);
+                unset($phrases[$k]);
             }
         }
-		return $phrases;
-	}
-
-	public static function GetPhrasesWithPlusAndSugar($phrases=array()){
-		$phrases_with_plus = Phrases::GetPhrasesWithPlus($phrases);
-		$phrases_with_sugar = Phrases::GetPhrasesWithSugar($phrases_with_plus, $phrases);
+        return $phrases;
+    }
+    public static function GetPhrasesWithPlusAndSugar($phrases=array()){
+        $phrases_with_plus = Phrases::GetPhrasesWithPlus($phrases);
+        $phrases_with_sugar = Phrases::GetPhrasesWithSugar($phrases_with_plus, $phrases);
 
         return $phrases_with_sugar;
-	}
-
-	public static function GetPhrasesWithPlus($words=array()){
+    }
+    public static function GetPhrasesWithPlus($words=array()){
         $words_with_plus = array();
 
-		for($i=0;$i<count($words);$i++){
-			$tmp_word = '+'.str_replace(' ', ' +', trim($words[$i]));
-			if(strlen($tmp_word) > 0 && strlen($tmp_word) <= 80){
-				$words_with_plus[] = $tmp_word;
-			}
-		}
+        for($i=0;$i<count($words);$i++){
+            $tmp_word = '+'.str_replace(' ', ' +', trim($words[$i]));
+            if(strlen($tmp_word) > 0 && strlen($tmp_word) <= 80){
+                $words_with_plus[] = $tmp_word;
+            }
+        }
 
         return $words_with_plus;
     }
-     public static function GetPhrasesWithSugar($words_with_plus=array(), $words=array()){
+    public static function GetPhrasesWithSugar($words_with_plus=array(), $words=array()){
         $words_with_sugar = array();
 
         $sugar = Phrases::GetSugar();
 
-		foreach($sugar as $k => $v){
+        foreach($sugar as $k => $v){
             $tmp_words = array();
 
             for($i=0;$i<count($words);$i++){
@@ -322,11 +319,11 @@ class Phrases {
             }
         }
 
-		foreach($words_arr as $wId=>$wVal){
+        foreach($words_arr as $wId=>$wVal){
             foreach($all_ph as $k=>$v){
-				$v = str_replace('_', ' ', $v);
-				$v = trim(preg_replace('/[\s]+/', ' ', $v));
-				$all_ph[$k] = $v;
+                $v = str_replace('_', ' ', $v);
+                $v = trim(preg_replace('/[\s]+/', ' ', $v));
+                $all_ph[$k] = $v;
 
                 $origin_arr = explode(' ', $v);
 
@@ -490,12 +487,12 @@ class Phrases {
             0 => '',
             1 => 'fillable',
             2 => 'fill online',
-			3 => 'fill in',
-			4 => 'fill out',
+            3 => 'fill in',
+            4 => 'fill out',
             5 => 'editable',
             6 => 'writeable',
             7 => 'printable',
-			8 => 'sign',
+            8 => 'sign',
             9 => 'pdf',
             10 => 'online',
             11 => 'blank',
@@ -503,9 +500,9 @@ class Phrases {
             13 => 'email',
             14 => 'print',
             15 => 'download',
-			16 => 'pdffiller'
-		);
+            16 => 'pdffiller'
+        );
 
     }
 }
-?>
+

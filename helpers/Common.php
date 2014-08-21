@@ -34,7 +34,8 @@ class Common {
      * @param string $keyword
      * @return string
      */
-    static function convertSpaceToPlus($keyword){
+    static function convertSpaceToPlus
+    ($keyword){
 
         $data = explode(' ', $keyword);
 
