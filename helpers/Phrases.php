@@ -7,19 +7,31 @@ namespace denisog\gah\helpers;
 
 class Phrases{
 
+    /**
+     *
+     * @param $ph1 - слово
+     * @param $words - массив слов
+     * @param $i
+     */
     public static function phrase($ph1, $words, $i){
-        global $all_ph, $all_bad_ph;
 
+        global $all_ph; //массив со всеми фразами,
+        global $all_bad_ph;
+        //запускаю цикл, который проходит по массиву со всеми словами,
+        //но начинает проход с индекса(ключа) $i
         for($j = $i; $j < count($words); $j++){
+            //конкатенирую слово из массива с текущем, через пробел
             $ph = $ph1.' '.$words[$j];
-
+            //если текущего слова нет в массив со всеми фразами и если его размер меньше 80 символов,
+            //то добавляю  фразу в массив со всеми фразами
             if(!in_array($ph, $all_ph)){
                 if(strlen($ph) >= 80){
                     $all_bad_ph[] = $ph;
                 }else{
                     $all_ph[] = $ph;
                 }
-
+                //если это не последнее слово, то забускаю функцию формирования фразы
+                //устанавливаю ключ = текущий + 1
                 if($j < count($words) - 1){
                     Phrases::phrase($ph, $words, $j+1);
                 }
@@ -47,23 +59,30 @@ class Phrases{
 
     public static function GetManualPhrases($manual_phrase=''){
 
-       // global $phrases;
+       global $phrases;
 
         $words_arr = array();
-
+        //левый кавычки
         $brackets1 = array('[', '{', '(', '<', "'", '"');
+        //правые  кавычки
         $brackets2 = array(']', '}', ')', '>', "'", '"');
-
+        //вырезаю угловые кавычки из входящей строки
         $manual_phrase = str_replace(array('<', '>'), ' ', $manual_phrase);
+        //заменяю все пробелы больше одного на один пробел
         $manual_phrase = trim(preg_replace('/[\s]+/', ' ', $manual_phrase));
-
+        //получается строка, в которой есть только круглые и фигурные скобки, одинарные кавычки  и пробелы.
+        //все углобые кавычки были заменены на пробелы
         $manual_phrase = Phrases::GetUpdatePhrase($manual_phrase);
+        //массив данных по каждой подстроки
         $words_arr = Phrases::GetWordsArray($manual_phrase, $brackets1, $brackets2);
 
+
+        //строка ьез каких либо знаков препинания. только слова разделенные пробелами
         $param = str_replace($brackets1, ' ', $manual_phrase);
         $param = str_replace($brackets2, ' ', $param);
         $param = trim(preg_replace('/[\s]+/', ' ', $param));
 
+        //массив слов
         $param_array = explode(' ', $param);
 
         $phrases = Phrases::GetPhrase_no_google3($param_array, $words_arr, $brackets1, $brackets2);
@@ -189,16 +208,29 @@ class Phrases{
         return $words_with_sugar;
     }
 
+    /**
+     * @param array $words - массив слов
+     * @param array $words_arr - массив строк и в каких кавычках/скобках  они заключенны
+     * шаблон: ['word' => 'входящая фраза без скобок/кавычек', 'key' => 'скобка/кавычка']
+     * @param array $brackets1 - массив с правыми скобками/кавычками
+     * @param array $brackets2 - массив с левыми скобками/кавычками
+     * @return array
+     */
     public static function GetPhrase_no_google3($words=array(), $words_arr=array(), $brackets1=array(), $brackets2=array()){
         global $all_ph;
+
 
         $delim=array('-','.','');
 
         $temp_words=array();
         $temp_words_low=array();
 
+        //прохожу по всем словам и добавляю их в другой массив.
+        //исключаю повторные слова.
         for($i=0;$i<count($words);$i++){
+           //переводу их в нижний регистр
             $low=strtolower($words[$i]);
+           //если есть слово и  его нет в массиве  temp_words, то добавляю его в этото массив
             if(/*!in_array($low, array('fillable', 'the', 'a', ' ', 'of')) && */!in_array($low,$temp_words_low) && strlen($low)>0){
                 $temp_words[]=$words[$i];
                 $temp_words_low[]=$low;
@@ -413,7 +445,16 @@ class Phrases{
 
         return $all_ph;
     }
-    // фразу в фигурных скобках объединяем в одно слово вчерез '_'
+    /**
+     * Функция, которая конкатенирует слова, через "_".
+     * Заменяет пробелы на "_"
+     * Слова для обработки должны находится между двумя скобками  $bracket_left  и $bracket_right
+     * @param $phrase фраза, над которой будет идти операция
+     * @param string $bracket_left - правая кавычка
+     * @param string $bracket_right - левая кавычка
+     * @return mixed -строка, в которой пробелы заменены на "_", между словами,
+     * которые находяться между кавычками $bracket_left  и $bracket_right
+     */
     public static function GetUpdatePhrase($phrase, $bracket_left='{', $bracket_right='}'){
         $keyword_tmp = $phrase;
 
@@ -431,31 +472,74 @@ class Phrases{
 
         return $phrase;
     }
+
+
+
+
+    /**
+     * Метод, получает строку, и возвращает массив массивов типа:
+     * [
+     *      'word' => 'входящая фраза без скобок/кавычек',
+     *      'key' => 'скобка/кавычка'
+     * ]
+     * Пример:
+     * print_r('{[some string]}', array('{','['), array('}',']'));
+     *
+     * Результат:
+     * [
+     *       [
+     *          'word' => '[some string]',
+     *          'key' => '{'
+     *       ],
+     *      [
+     *          'word' => 'some string',
+     *          'key' => '['
+     *       ]
+     * ]
+     * Функция разбивает входящую строку, на подстроки, ограниченные кавычками/ скобками из массива $brackets1
+     * Метод запускает рекурсивно. За один запуск метод  находит и создает один массив из подстроки.
+     * @param $phrase string - строка, которую нужно обработать.
+     * @param array $brackets1 array - массив с правыми кавычками
+     * @param array $brackets2 array - массив с левыми кавычками
+     * @return array - результирующий массив с элементами ['word' => 'входящая фраза без скобок/кавычек', 'key' => 'скобка/кавычка']
+     */
     // разбираем фразу, делаем массив с пометкой фраз в скобках
     public static function GetWordsArray($phrase, $brackets1=array(), $brackets2=array()){
         $i = 0;
         $words_arr = array();
 
+        //выполнять цикл до тех пор, пока в исходно строке будут все левые(открывающие) скобки и кавычки
         while(strpos($phrase, '[') !== FALSE || strpos($phrase, '{') !== FALSE
             || strpos($phrase, '(') !== FALSE || strpos($phrase, '"') !== FALSE
             || strpos($phrase, "'") !== FALSE){
+            //в строке есть открывающие (левые) скобки или кавычки.
             $pos = -1;
             $br = '';
             $bKey = -1;
             $tmp_word = '';
 
+            //цикл ищет самую первую левую(начинающеюся) скобку/кавычку
+
+            //запускаю цикл по массиву из левых кавычек/скобку
             foreach($brackets1 AS $bId=>$bVal){
+                //нахожу позицию кавычки в строке
                 $pos_tmp = strpos($phrase, $bVal);
+                //если кавычка есть
                 if($pos_tmp !== FALSE){
+                    //если позиция скобки меньше, чем предыддущая позиция скобки или  предыдущая позиция == -1
                     if($pos > $pos_tmp || $pos == -1){
+                        /// то изменяю позицию предыдущей скобки, как настоящую
                         $pos = $pos_tmp;
+                        //устанавливаю название скобки
                         $br = $bVal;
+                        //устанавливаю ключ скобки
                         $bKey = $bId;
                     }
                 }
             }
-
+            //если  была найдена в строке левая скобка/кавычка
             if($pos > -1 && $br != '' && $bKey != -1){
+                //то вырезаю это слово, которое находится в кавычках
                 $tmp_word = substr($phrase, $pos+1, strpos($phrase, $brackets2[$bKey], $pos+1)-$pos-1);
             }
 

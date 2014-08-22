@@ -5,7 +5,8 @@
 	"keywords": ["yii2","extension","google","adwords "],
 	"license": "GPL-2.0+",
     "require": {
-        "googleads/googleads-php-lib": "dev-master"
+        "googleads/googleads-php-lib": "dev-master",
+        "pear/math_combinatorics": "*"
     },
 	"authors": [
 		{
