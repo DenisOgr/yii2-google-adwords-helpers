@@ -251,8 +251,17 @@ class Phrases{
 
         for($i=1; $i<=count($temp_words); $i++) {
             $all_ph_arrays = array_merge($all_ph_arrays,$combinatorics->combinations($temp_words, $i));
-            var_dump(count($all_ph_arrays));
         }
+
+        foreach ($all_ph_arrays as $phrase) {
+            $string   = implode(' ', $phrase);
+            if (strlen($string) <= 80) {
+                $all_ph[] = $string;
+            } else {
+                $all_bad_ph[] = $string;
+            }
+        }
+
 
         foreach ($all_ph_arrays as $phrase) {
             $string   = implode(' ', $phrase);
