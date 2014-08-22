@@ -218,6 +218,7 @@ class Phrases{
      */
     public static function GetPhrase_no_google3($words=array(), $words_arr=array(), $brackets1=array(), $brackets2=array()){
         global $all_ph;
+        $all_bad_ph = [];
 
 
         $delim=array('-','.','');
@@ -237,9 +238,29 @@ class Phrases{
             }
         }
 
-        for($i=0;$i<count($temp_words);$i++){
+     /*  for($i=0;$i<count($temp_words);$i++){
             $all_ph[]=$temp_words[$i];
             Phrases::phrase($temp_words[$i],$temp_words,$i+1);
+        }
+        $all_ph_script1= $all_ph;
+*/
+       // $temp_words_low = ['How', 'How_to', 'fill'] ;
+        $combinatorics = new \Math_Combinatorics;
+
+        $all_ph_arrays = [];
+
+        for($i=1; $i<=count($temp_words); $i++) {
+            $all_ph_arrays = array_merge($all_ph_arrays,$combinatorics->combinations($temp_words, $i));
+            var_dump(count($all_ph_arrays));
+        }
+
+        foreach ($all_ph_arrays as $phrase) {
+            $string   = implode(' ', $phrase);
+            if (strlen($string) <= 80) {
+                $all_ph[] = $string;
+            } else {
+                $all_bad_ph[] = $string;
+            }
         }
 
         $check_sq = 0;
