@@ -10,23 +10,21 @@ namespace denisog\gah\helpers;
 
 
 class Group {
-    function create($adVersion, AdWordsUser $user, $campaignId, $groupName) {
+    public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName) {
 
         // Get the service, which loads the required classes.
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
 
-        $numAdGroups = 1;
-        $operations = array();
 
         // Create ad group.
-        $adGroup = new AdGroup();
+        $adGroup = new \AdGroup();
         $adGroup->campaignId = $campaignId;
         $adGroup->name = $groupName;
 
         // Set bids (required).
-        $bid = new CpcBid();
-        $bid->bid =  new Money(1000000);
-        $biddingStrategyConfiguration = new BiddingStrategyConfiguration();
+        $bid = new \CpcBid();
+        $bid->bid =  new \Money(1000000);
+        $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
         $biddingStrategyConfiguration->bids[] = $bid;
         $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
 
@@ -35,23 +33,22 @@ class Group {
 
         // Targetting restriction settings - these setting only affect serving
         // for the Display Network.
-        $targetingSetting = new TargetingSetting();
+        $targetingSetting = new \TargetingSetting();
         // Restricting to serve ads that match your ad group placements.
         $targetingSetting->details[] =
-            new TargetingSettingDetail('PLACEMENT', TRUE);
+            new \TargetingSettingDetail('PLACEMENT', TRUE);
         // Using your ad group verticals only for bidding.
         $targetingSetting->details[] =
-            new TargetingSettingDetail('VERTICAL', FALSE);
+            new \TargetingSettingDetail('VERTICAL', FALSE);
         $adGroup->settings[] = $targetingSetting;
 
         // Create operation.
-        $operation = new AdGroupOperation();
+        $operation = new \AdGroupOperation();
         $operation->operand = $adGroup;
         $operation->operator = 'ADD';
-        $operations[] = $operation;
 
         // Make the mutate request.
-        $result = $adGroupService->mutate($operations);
+        $result = $adGroupService->mutate($operation);
 
         // Display result.
         return $result->value;

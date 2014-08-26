@@ -19,7 +19,6 @@ class Keyword {
 
     static public function addKeyword($adVersion, \AdWordsUser $user, $text, \denisog\gah\models\AdWordsLocation $location, $matchType, $bidAmmount = false) {
 
-        addKeyword(HAdWords::getKeywordServiceByUser(HAdWords::getUserForGroup(5)), new AdWordsLocation(1,2,5), HAdWords::MATCH_TYPE_PHRASE);
 
         $service= $user->GetService(self::SERVICE, $adVersion);
 
