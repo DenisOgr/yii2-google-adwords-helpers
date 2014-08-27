@@ -46,9 +46,9 @@ class Group {
         $operation = new \AdGroupOperation();
         $operation->operand = $adGroup;
         $operation->operator = 'ADD';
-
+        $operations[] = $operation;
         // Make the mutate request.
-        $result = $adGroupService->mutate($operation);
+        $result = $adGroupService->mutate($operations);
 
         // Display result.
         return $result->value;
