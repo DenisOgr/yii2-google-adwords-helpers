@@ -1,22 +1,29 @@
 {
-	"name": "denisogr/yii2-google-adwords-helpers",
-	"description": "yii2-google-adwords-helpers",
-	"type": "yii2-extension",
-	"keywords": ["yii2","extension","google","adwords "],
-	"license": "GPL-2.0+",
+    "name": "denisogr/yii2-google-adwords-helpers",
+    "description": "yii2-google-adwords-helpers",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","google","adwords "],
+    "license": "GPL-2.0+",
     "require": {
         "googleads/googleads-php-lib": "dev-master",
-        "pear/math_combinatorics": "*"
+        "pear/math_combinatorics": "*",
+        "denisogr/yii2-seogenerator": "*"
     },
-	"authors": [
-		{
-			"name": "Denis Porplenko",
-			"email": "denis.porplenko@gmail.com"
-		}
-	],
-	"autoload": {
-		"psr-4": {
-			"denisog\\gah\\": ""
-		}
-	}
+    "authors": [
+        {
+            "name": "Denis Porplenko",
+            "email": "denis.porplenko@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "denisog\\gah\\": ""
+        }
+    },
+    "repositories":[
+        {
+            "type":"git",
+            "url":"https://github.com/DenisOgr/seogenerator"
+        }
+    ]
 }
