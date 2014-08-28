@@ -22,11 +22,5 @@
         "psr-4": {
             "denisog\\gah\\": ""
         }
-    },
-    "repositories":[
-        {
-            "type":"git",
-            "url":"https://github.com/DenisOgr/yii2-seogenerator"
-        }
-    ]
+    }
 }
