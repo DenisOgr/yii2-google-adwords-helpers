@@ -7,7 +7,6 @@
     "require": {
         "googleads/googleads-php-lib": "dev-master",
         "pear/math_combinatorics": "*"
-      //  "denisogr/yii2-seogenerator": "*"
     },
     "authors": [
         {
