@@ -8,7 +8,7 @@
         "php": ">=5.4.0",
         "googleads/googleads-php-lib": "dev-master",
         "pear/math_combinatorics": "*",
-        "denisogr/yii2-seogenerator": "*"
+        "ikr/money-math": "0.1.*"
 
     },
     "authors": [
