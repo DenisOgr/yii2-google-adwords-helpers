@@ -6,8 +6,8 @@
     "license": "GPL-2.0+",
     "require": {
         "googleads/googleads-php-lib": "dev-master",
-        "pear/math_combinatorics": "*",
-        "denisogr/yii2-seogenerator": "*"
+        "pear/math_combinatorics": "*"
+      //  "denisogr/yii2-seogenerator": "*"
     },
     "authors": [
         {
