@@ -6,7 +6,9 @@
     "license": "GPL-2.0+",
     "require": {
         "googleads/googleads-php-lib": "dev-master",
-        "pear/math_combinatorics": "*"
+        "pear/math_combinatorics": "*",
+        "denisogr/yii2-seogenerator": "*"
+
     },
     "authors": [
         {
@@ -22,7 +24,7 @@
     "repositories":[
         {
             "type":"git",
-            "url":"https://github.com/DenisOgr/seogenerator"
+            "url":"https://github.com/DenisOgr/yii2-seogenerator"
         }
     ]
 }
