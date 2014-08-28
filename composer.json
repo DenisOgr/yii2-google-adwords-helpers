@@ -8,7 +8,6 @@
         "php": ">=5.4.0",
         "googleads/googleads-php-lib": "dev-master",
         "pear/math_combinatorics": "*",
-        "supremenewmedia/finance": "dev-master",
         "denisogr/yii2-seogenerator": "*"
 
     },
