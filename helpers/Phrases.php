@@ -59,8 +59,6 @@ class Phrases{
 
     public static function GetManualPhrases($manual_phrase=''){
 
-       global $phrases;
-
         $words_arr = array();
         //левый кавычки
         $brackets1 = array('[', '{', '(', '<', "'", '"');
@@ -247,222 +245,213 @@ class Phrases{
        // $temp_words_low = ['How', 'How_to', 'fill'] ;
         $combinatorics = new \Math_Combinatorics;
 
-        $all_ph_arrays = [];
+        $all_ph= [];
+        $all_ph_success= [];
 
         for($i=1; $i<=count($temp_words); $i++) {
-            $all_ph_arrays = array_merge($all_ph_arrays,$combinatorics->combinations($temp_words, $i));
-        }
+            $all_ph_arrays = [];
+            $all_ph_string = [];
+            $raw_phrases_array = $combinatorics->combinations($temp_words, $i);
 
-        foreach ($all_ph_arrays as $phrase) {
-            $string   = implode(' ', $phrase);
-            if (strlen($string) <= 80) {
-                $all_ph[] = $string;
-            } else {
-                $all_bad_ph[] = $string;
+            foreach ($raw_phrases_array as $phrase) {
+                $string   = implode(' ', $phrase);
+                if (strlen($string) <= 80) {
+                    $all_ph[] = $string;
+                }
             }
-        }
 
-
-        foreach ($all_ph_arrays as $phrase) {
-            $string   = implode(' ', $phrase);
-            if (strlen($string) <= 80) {
-                $all_ph[] = $string;
-            } else {
-                $all_bad_ph[] = $string;
-            }
-        }
-
-        $check_sq = 0;
-        foreach($words_arr as $wId=>$wVal){
-            if($wVal['key'] == "["){
-                foreach($words_arr as $wId2=>$wVal2){
-                    if($wVal2['key'] == "{" && $wVal2['word'] == '['.$wVal['word'].']'){
-                        $check_sq = 1;
+            $check_sq = 0;
+            foreach($words_arr as $wId=>$wVal){
+                if($wVal['key'] == "["){
+                    foreach($words_arr as $wId2=>$wVal2){
+                        if($wVal2['key'] == "{" && $wVal2['word'] == '['.$wVal['word'].']'){
+                            $check_sq = 1;
+                        }
                     }
                 }
             }
-        }
 
-        foreach($words_arr as $wId=>$wVal){
-            foreach($all_ph as $k=>$v){
-                $origin_arr = explode(' ', $v);
+            foreach($words_arr as $wId=>$wVal){
+                foreach($all_ph as $k=>$v){
+                    $origin_arr = explode(' ', $v);
 
-                $wVal['word'] = str_replace($brackets1, ' ', $wVal['word']);
-                $wVal['word'] = str_replace($brackets2, ' ', $wVal['word']);
-                $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
-                $wValArr = explode(' ', $wVal['word']);
-
-                if($wVal['key'] == "'" || $wVal['key'] == '"'){ //если ' или "
-                    if(!in_array($wVal['word'], $origin_arr)){
-                        unset($all_ph[$k]);
-                    }
-                }elseif($wVal['key'] == "[" && $check_sq == 1){ //если {[]}
-                    $words_count = 0;
-                    $part = '';
-
-                    $wVal['word'] = str_replace('_', ' ', $wVal['word']);
+                    $wVal['word'] = str_replace($brackets1, ' ', $wVal['word']);
+                    $wVal['word'] = str_replace($brackets2, ' ', $wVal['word']);
                     $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
                     $wValArr = explode(' ', $wVal['word']);
 
-                    foreach($wValArr AS $awK=>$awV){
-                        if(in_array($awV, $origin_arr)){
-                            $words_count++;
-                            $part .= ' '.$awV;
+                    if($wVal['key'] == "'" || $wVal['key'] == '"'){ //если ' или "
+                        if(!in_array($wVal['word'], $origin_arr)){
+                            unset($all_ph[$k]);
                         }
-                    }
+                    }elseif($wVal['key'] == "[" && $check_sq == 1){ //если {[]}
+                        $words_count = 0;
+                        $part = '';
 
-                    $part = trim($part);
+                        $wVal['word'] = str_replace('_', ' ', $wVal['word']);
+                        $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
+                        $wValArr = explode(' ', $wVal['word']);
 
-                    if($words_count > 1){
-                        for($j = 0; $j < count($delim); $j++){
-                            $now_part = preg_replace("/ /", $delim[$j], $part);
-                            $now = str_replace($part, $now_part, $v);
-
-                            if(!in_array($now, $all_ph)){
-                                $all_ph[] = $now;
+                        foreach($wValArr AS $awK=>$awV){
+                            if(in_array($awV, $origin_arr)){
+                                $words_count++;
+                                $part .= ' '.$awV;
                             }
+                        }
 
-                            foreach($delim as $id=>$val){
-                                $part2 = $part;
-                                $pos = 0;
+                        $part = trim($part);
 
-                                while(strpos($part2, ' ') !== FALSE){
-                                    $part_x = $part;
+                        if($words_count > 1){
+                            for($j = 0; $j < count($delim); $j++){
+                                $now_part = preg_replace("/ /", $delim[$j], $part);
+                                $now = str_replace($part, $now_part, $v);
 
-                                    $pos = strpos($part2, ' ', $pos);
-                                    $part2 = substr_replace($part2, $val, $pos, 1);
-                                    $part_x = substr_replace($part_x, $val, strpos($part, ' ', $pos), 1);
+                                if(!in_array($now, $all_ph)){
+                                    $all_ph[] = $now;
+                                }
 
-                                    $now = str_replace($part, $part2, $v);
-                                    if(!in_array($now, $all_ph)){
-                                        $all_ph[] = $now;
-                                    }
+                                foreach($delim as $id=>$val){
+                                    $part2 = $part;
+                                    $pos = 0;
 
-                                    $now = str_replace($part, $part_x, $v);
-                                    if(!in_array($now, $all_ph)){
-                                        $all_ph[] = $now;
-                                    }
+                                    while(strpos($part2, ' ') !== FALSE){
+                                        $part_x = $part;
 
-                                    foreach($delim as $key=>$value){
-                                        $part3 = str_replace(' ', $value, $part2);
-                                        $now = str_replace($part, $part3, $v);
+                                        $pos = strpos($part2, ' ', $pos);
+                                        $part2 = substr_replace($part2, $val, $pos, 1);
+                                        $part_x = substr_replace($part_x, $val, strpos($part, ' ', $pos), 1);
 
+                                        $now = str_replace($part, $part2, $v);
                                         if(!in_array($now, $all_ph)){
                                             $all_ph[] = $now;
                                         }
 
-                                        $part3 = str_replace(' ', $value, $part_x);
-                                        $now = str_replace($part, $part3, $v);
-
+                                        $now = str_replace($part, $part_x, $v);
                                         if(!in_array($now, $all_ph)){
                                             $all_ph[] = $now;
+                                        }
+
+                                        foreach($delim as $key=>$value){
+                                            $part3 = str_replace(' ', $value, $part2);
+                                            $now = str_replace($part, $part3, $v);
+
+                                            if(!in_array($now, $all_ph)){
+                                                $all_ph[] = $now;
+                                            }
+
+                                            $part3 = str_replace(' ', $value, $part_x);
+                                            $now = str_replace($part, $part3, $v);
+
+                                            if(!in_array($now, $all_ph)){
+                                                $all_ph[] = $now;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                }elseif($wVal['key'] == "("){ //если ()
-                    $words_count = 0;
+                    }elseif($wVal['key'] == "("){ //если ()
+                        $words_count = 0;
 
-                    foreach($wValArr AS $wK=>$wV){
-                        if(in_array($wV, $origin_arr) && strpos($v, $wV) !== FALSE){
-                            $words_count++;
+                        foreach($wValArr AS $wK=>$wV){
+                            if(in_array($wV, $origin_arr) && strpos($v, $wV) !== FALSE){
+                                $words_count++;
+                            }
                         }
-                    }
 
-                    if(($words_count > 1 || strpos(' '.$v.' ', ' '.trim(str_replace('_', ' ',$wVal['word'])).' ') !== FALSE )){
-                        unset($all_ph[$k]);
-                    }
-                }elseif($wVal['key'] == "{"){ //если {}
-                    $words_count = 0;
-
-                    foreach($wValArr AS $wK=>$wV){
-                        if(in_array($wV, $origin_arr)){
-                            $words_count++;
+                        if(($words_count > 1 || strpos(' '.$v.' ', ' '.trim(str_replace('_', ' ',$wVal['word'])).' ') !== FALSE )){
+                            unset($all_ph[$k]);
                         }
-                    }
+                    }elseif($wVal['key'] == "{"){ //если {}
+                        $words_count = 0;
 
-                    if($words_count != 0 && $words_count != count($wValArr) && strpos($v, $wVal['word']) === FALSE){
-                        unset($all_ph[$k]);
+                        foreach($wValArr AS $wK=>$wV){
+                            if(in_array($wV, $origin_arr)){
+                                $words_count++;
+                            }
+                        }
+
+                        if($words_count != 0 && $words_count != count($wValArr) && strpos($v, $wVal['word']) === FALSE){
+                            unset($all_ph[$k]);
+                        }
                     }
                 }
             }
-        }
 
-        foreach($words_arr as $wId=>$wVal){
-            foreach($all_ph as $k=>$v){
-                $v = str_replace('_', ' ', $v);
-                $v = trim(preg_replace('/[\s]+/', ' ', $v));
-                $all_ph[$k] = $v;
+            foreach($words_arr as $wId=>$wVal){
+                foreach($all_ph as $k=>$v){
+                    $v = str_replace('_', ' ', $v);
+                    $v = trim(preg_replace('/[\s]+/', ' ', $v));
+                    $all_ph[$k] = $v;
 
-                $origin_arr = explode(' ', $v);
+                    $origin_arr = explode(' ', $v);
 
-                $wVal['word'] = str_replace($brackets1, ' ', $wVal['word']);
-                $wVal['word'] = str_replace($brackets2, ' ', $wVal['word']);
-                $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
-                $wValArr = explode(' ', $wVal['word']);
-
-                if($wVal['key'] == "["){ //если []
-                    $words_count = 0;
-                    $part = '';
-
-                    $wVal['word'] = str_replace('_', ' ', $wVal['word']);
+                    $wVal['word'] = str_replace($brackets1, ' ', $wVal['word']);
+                    $wVal['word'] = str_replace($brackets2, ' ', $wVal['word']);
                     $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
                     $wValArr = explode(' ', $wVal['word']);
 
-                    foreach($wValArr AS $awK=>$awV){
-                        if(in_array($awV, $origin_arr)){
-                            $words_count++;
-                            $part .= ' '.$awV;
-                        }
-                    }
+                    if($wVal['key'] == "["){ //если []
+                        $words_count = 0;
+                        $part = '';
 
-                    $part = trim($part);
+                        $wVal['word'] = str_replace('_', ' ', $wVal['word']);
+                        $wVal['word'] = trim(preg_replace('/[\s]+/', ' ', $wVal['word']));
+                        $wValArr = explode(' ', $wVal['word']);
 
-                    if($words_count > 1){
-                        for($j = 0; $j < count($delim); $j++){
-                            $now_part = preg_replace("/ /", $delim[$j], $part);
-                            $now = str_replace($part, $now_part, $v);
-
-                            if(!in_array($now, $all_ph)){
-                                $all_ph[] = $now;
+                        foreach($wValArr AS $awK=>$awV){
+                            if(in_array($awV, $origin_arr)){
+                                $words_count++;
+                                $part .= ' '.$awV;
                             }
+                        }
 
-                            foreach($delim as $id=>$val){
-                                $part2 = $part;
-                                $pos = 0;
+                        $part = trim($part);
 
-                                while(strpos($part2, ' ') !== FALSE){
-                                    $part_x = $part;
+                        if($words_count > 1){
+                            for($j = 0; $j < count($delim); $j++){
+                                $now_part = preg_replace("/ /", $delim[$j], $part);
+                                $now = str_replace($part, $now_part, $v);
 
-                                    $pos = strpos($part2, ' ', $pos);
-                                    $part2 = substr_replace($part2, $val, $pos, 1);
-                                    $part_x = substr_replace($part_x, $val, strpos($part, ' ', $pos), 1);
+                                if(!in_array($now, $all_ph)){
+                                    $all_ph[] = $now;
+                                }
 
-                                    $now = str_replace($part, $part2, $v);
-                                    if(!in_array($now, $all_ph)){
-                                        $all_ph[] = $now;
-                                    }
+                                foreach($delim as $id=>$val){
+                                    $part2 = $part;
+                                    $pos = 0;
 
-                                    $now = str_replace($part, $part_x, $v);
-                                    if(!in_array($now, $all_ph)){
-                                        $all_ph[] = $now;
-                                    }
+                                    while(strpos($part2, ' ') !== FALSE){
+                                        $part_x = $part;
 
-                                    foreach($delim as $key=>$value){
-                                        $part3 = str_replace(' ', $value, $part2);
-                                        $now = str_replace($part, $part3, $v);
+                                        $pos = strpos($part2, ' ', $pos);
+                                        $part2 = substr_replace($part2, $val, $pos, 1);
+                                        $part_x = substr_replace($part_x, $val, strpos($part, ' ', $pos), 1);
 
+                                        $now = str_replace($part, $part2, $v);
                                         if(!in_array($now, $all_ph)){
                                             $all_ph[] = $now;
                                         }
 
-                                        $part3 = str_replace(' ', $value, $part_x);
-                                        $now = str_replace($part, $part3, $v);
-
+                                        $now = str_replace($part, $part_x, $v);
                                         if(!in_array($now, $all_ph)){
                                             $all_ph[] = $now;
+                                        }
+
+                                        foreach($delim as $key=>$value){
+                                            $part3 = str_replace(' ', $value, $part2);
+                                            $now = str_replace($part, $part3, $v);
+
+                                            if(!in_array($now, $all_ph)){
+                                                $all_ph[] = $now;
+                                            }
+
+                                            $part3 = str_replace(' ', $value, $part_x);
+                                            $now = str_replace($part, $part3, $v);
+
+                                            if(!in_array($now, $all_ph)){
+                                                $all_ph[] = $now;
+                                            }
                                         }
                                     }
                                 }
@@ -471,9 +460,10 @@ class Phrases{
                     }
                 }
             }
-        }
 
-        return $all_ph;
+            $all_ph_success = array_merge($all_ph_success, $all_ph);
+        }
+        return $all_ph_success;
     }
     /**
      * Функция, которая конкатенирует слова, через "_".
