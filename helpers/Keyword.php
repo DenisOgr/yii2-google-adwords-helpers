@@ -17,44 +17,61 @@ class Keyword {
 
     const SERVICE = 'AdGroupCriterionService';
 
-    static public function addKeyword($adVersion, \AdWordsUser $user, $text, \denisog\gah\models\AdWordsLocation $location, $matchType, $bidAmmount = false) {
+    /**
+     * Create (send) keyword to google adwords
+     * @param array $keywords - keywords
+     * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @param \denisog\gah\models\AdWordsLocation $location
+     * @param array $settings
+     * @return bool
+     */
+    static public function create(array $keywords, $adVersion, \AdWordsUser $user,  \denisog\gah\models\AdWordsLocation $location, array $settings) {
 
-        addKeyword(HAdWords::getKeywordServiceByUser(HAdWords::getUserForGroup(5)), new AdWordsLocation(1,2,5), HAdWords::MATCH_TYPE_PHRASE);
+        $adGroupCriterionService =
+            $user->GetService('AdGroupCriterionService', $adVersion);
 
-        $service= $user->GetService(self::SERVICE, $adVersion);
+        foreach ($keywords as $keywordItem) {
 
-        if($matchType === self::MATCH_TYPE_BROAD)
-            $text = Common::convertSpaceToPlus($text);
+            // Create keyword criterion.
+            $keyword            = new \Keyword();
+            $keyword->text      = $keywordItem;
+            $keyword->matchType = (isset($settings['matchType'])) ? $settings['matchType'] : self::MATCH_TYPE_BROAD;
 
-        $keyword = new Keyword();
-        $keyword->text = $text;
-        $keyword->matchType = $matchType;
+            // Create biddable ad group criterion.
+            $adGroupCriterion            = new \BiddableAdGroupCriterion();
+            $adGroupCriterion->adGroupId = $location->group;
+            $adGroupCriterion->criterion = $keyword;
 
-        $adGroupCriterion = new BiddableAdGroupCriterion();
-        $adGroupCriterion->adGroupId = $location->group;
-        $adGroupCriterion->criterion = $keyword;
+            // Set additional settings (optional).
+            if (isset($settings['userStatus'])) {
+                $adGroupCriterion->userStatus = $settings['userStatus'];
+            }
 
-        if($bidAmmount){
+            if (isset($settings['destinationUrl'])) {
+                $adGroupCriterion->destinationUrl = $settings['destinationUrl'];
+            }
+            if (isset($settings['setBid'])) {
+                // Set bids (optional).
+                $bid = new \CpcBid();
+                $bid->bid =  new \Money($settings['setBid']);
+                $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+                $biddingStrategyConfiguration->bids[] = $bid;
+                $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+                $adGroupCriteria[] = $adGroupCriterion;
 
-            $bid = new CpcBid();
-            $maxCpc = $bidAmmount * ML;
-            $bid->bid = new Money($maxCpc);
-            $biddingStrategyConfiguration = new BiddingStrategyConfiguration();
-            $biddingStrategyConfiguration->bids[] = $bid;
-            $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
-
+            }
+            // Create operation.
+            $operation = new \AdGroupCriterionOperation();
+            $operation->operand = $adGroupCriterion;
+            $operation->operator = 'ADD';
+            $operations[] = $operation;
         }
 
-        $adGroupCriterion->userStatus = 'ENABLED';
+        // Make the mutate request.
+        $result = $adGroupCriterionService->mutate($operations);
 
-        $operation = new AdGroupCriterionOperation();
-        $operation->operand = $adGroupCriterion;
-        $operation->operator = 'ADD';
-        $operations[] = $operation;
-
-        $results = $service->mutate($operations);
-
-        return Common::getFirstRowFromResults($results);
+        return true;
 
     }
-} 
+}
