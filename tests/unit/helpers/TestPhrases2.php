@@ -21,7 +21,7 @@ class TestPhrases2 extends PHPUnit_Framework_TestCase{
         $actualPhrases  = \denisog\gah\helpers\PhrasesOrig::GetManualPhrases($input);
 
         $messageError   = "Error Input: {$input}";
-        //$this->assertEqualsArrays($actualPhrasesR, $actualPhrases, $messageError);
+       // $this->assertEqualsArrays($actualPhrasesR, $actualPhrases, $messageError);
         self::$result[] = [
             'string' => $input,
             'new_parser' => $actualPhrasesR,
