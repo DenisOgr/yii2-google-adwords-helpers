@@ -17,6 +17,8 @@ class Keyword {
 
     const SERVICE = 'AdGroupCriterionService';
 
+    const MAX_LIMIT_FOR_QUERY = 2;
+
     /**
      * Create (send) keyword to google adwords
      * @param array $keywords - keywords
@@ -31,46 +33,48 @@ class Keyword {
         $adGroupCriterionService =
             $user->GetService('AdGroupCriterionService', $adVersion);
 
-        foreach ($keywords as $keywordItem) {
+        foreach (array_chunk($keywords, Keyword::MAX_LIMIT_FOR_QUERY) as $keywordItems) {
 
-            // Create keyword criterion.
-            $keyword            = new \Keyword();
-            $keyword->text      = $keywordItem;
-            $keyword->matchType = (isset($settings['matchType'])) ? $settings['matchType'] : self::MATCH_TYPE_BROAD;
+            foreach ($keywordItems as $keywordItem) {
 
-            // Create biddable ad group criterion.
-            $adGroupCriterion            = new \BiddableAdGroupCriterion();
-            $adGroupCriterion->adGroupId = $location->group;
-            $adGroupCriterion->criterion = $keyword;
+                // Create keyword criterion.
+                $keyword            = new \Keyword();
+                $keyword->text      = $keywordItem;
+                $keyword->matchType = (isset($settings['matchType'])) ? $settings['matchType'] : self::MATCH_TYPE_BROAD;
 
-            // Set additional settings (optional).
-            if (isset($settings['userStatus'])) {
-                $adGroupCriterion->userStatus = $settings['userStatus'];
+                // Create biddable ad group criterion.
+                $adGroupCriterion            = new \BiddableAdGroupCriterion();
+                $adGroupCriterion->adGroupId = $location->group;
+                $adGroupCriterion->criterion = $keyword;
+
+                // Set additional settings (optional).
+                if (isset($settings['userStatus'])) {
+                    $adGroupCriterion->userStatus = $settings['userStatus'];
+                }
+
+                if (isset($settings['destinationUrl'])) {
+                    $adGroupCriterion->destinationUrl = $settings['destinationUrl'];
+                }
+                if (isset($settings['setBid'])) {
+                    // Set bids (optional).
+                    $bid = new \CpcBid();
+                    $bid->bid =  new \Money($settings['setBid']);
+                    $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+                    $biddingStrategyConfiguration->bids[] = $bid;
+                    $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+                    $adGroupCriteria[] = $adGroupCriterion;
+
+                }
+                // Create operation.
+                $operation = new \AdGroupCriterionOperation();
+                $operation->operand = $adGroupCriterion;
+                $operation->operator = 'ADD';
+                $operations[] = $operation;
             }
 
-            if (isset($settings['destinationUrl'])) {
-                $adGroupCriterion->destinationUrl = $settings['destinationUrl'];
-            }
-            if (isset($settings['setBid'])) {
-                // Set bids (optional).
-                $bid = new \CpcBid();
-                $bid->bid =  new \Money($settings['setBid']);
-                $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
-                $biddingStrategyConfiguration->bids[] = $bid;
-                $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
-                $adGroupCriteria[] = $adGroupCriterion;
-
-            }
-            // Create operation.
-            $operation = new \AdGroupCriterionOperation();
-            $operation->operand = $adGroupCriterion;
-            $operation->operator = 'ADD';
-            $operations[] = $operation;
+            // Make the mutate request.
+            $result = $adGroupCriterionService->mutate($operations);
         }
-
-        // Make the mutate request.
-        $result = $adGroupCriterionService->mutate($operations);
-
         return true;
 
     }
