@@ -17,7 +17,7 @@ class Keyword {
 
     const SERVICE = 'AdGroupCriterionService';
 
-    const MAX_LIMIT_FOR_QUERY = 2;
+    const MAX_LIMIT_FOR_QUERY = 2000;
 
     /**
      * Create (send) keyword to google adwords
