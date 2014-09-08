@@ -11,6 +11,21 @@ namespace denisog\gah\helpers;
 
 class PhrasesR {
 
+    /**
+     * Limit chars in one keyword
+     */
+    const LIMIT_CHARRS_IN_PHRASE     = 80;
+
+    /**
+     * Limin count words in one keyword(phrase)
+     */
+    const LIMIT_WORDS_IN_PHRASE     = 6;
+
+    /**
+     * Limit count phrases in one query
+     */
+    const LIMIT_COUNT_PHRASE_IN_QUERY  = 10000;
+
     # List of tokens:
     # Opening brackets
    public static $op_br = ['zero_element', '(', '[', '{', "'", '<'];
@@ -30,8 +45,48 @@ class PhrasesR {
 
         $result = self::process_string($str);
 
-        return array_filter(array_map(function($data){return trim(preg_replace('/\s\s+/', ' ', $data));}, $result));
-      }
+        //remove double spaces and do trim
+        $result = array_map(function($data){return trim(preg_replace('/\s\s+/', ' ', $data));}, $result);
+
+        return PhrasesR::filetr($result);
+    }
+
+    public static function filetr(array $result,
+                                  $limit_chars       = self::LIMIT_CHARRS_IN_PHRASE,
+                                  $limit_words       = self::LIMIT_WORDS_IN_PHRASE,
+                                  $limit_count_words = self::LIMIT_COUNT_PHRASE_IN_QUERY)
+    {
+        //remove double spaces and do trim
+        $result = array_map(function($data){return trim(preg_replace('/\s\s+/', ' ', $data));}, $result);
+
+        //remove empty items
+        //remove items more LIMIT_CHARRS_IN_PHRASE
+        //remove items more LIMIT_WORDS_IN_PHRASE
+        $closure = function($input) use ($limit_chars, $limit_words) {
+            if (empty($input)) {
+                return false;
+            }
+            if (strlen($input) >= $limit_chars) {
+                return false;
+            }
+            if (str_word_count($input, 0) > $limit_words) {
+                return false;
+            }
+            return true;
+        };
+
+        $result =  array_filter($result, $closure);
+        //sort by strlen items
+        usort($result, function($a, $b) {
+            return strlen($a) - strlen($b);
+        });
+
+        //array slice result array
+        if (count($result) > $limit_count_words) {
+            $result = array_slice($result, 0, $limit_count_words);
+        }
+        return $result;
+    }
 
     public static function process_string($str)
     {
