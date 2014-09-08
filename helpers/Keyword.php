@@ -35,6 +35,8 @@ class Keyword {
 
         foreach (array_chunk($keywords, Keyword::MAX_LIMIT_FOR_QUERY) as $keywordItems) {
 
+            $operations =[];
+
             foreach ($keywordItems as $keywordItem) {
 
                 // Create keyword criterion.
@@ -74,6 +76,7 @@ class Keyword {
 
             // Make the mutate request.
             $result = $adGroupCriterionService->mutate($operations);
+            sleep(1);
         }
         return true;
 
