@@ -7,6 +7,7 @@
 
 namespace denisog\gah\helpers;
 
+use common\models\GoogleGroups;
 use denisog\gah\helpers\Common;
 
 class Keyword {
@@ -80,5 +81,91 @@ class Keyword {
         }
         return true;
 
+    }
+
+
+    /**
+     * Get keywords by groups IDs
+     * @param AdWordsUser $user the user to run the example with
+     * @param string $adGroupId the id of the parent ad group
+     */
+    public static function getByGroups( $adVersion, \AdWordsUser $user,   array $adGroupId, array $settings = []) {
+        //default settings
+        $fields = !empty($settings['fields']) ? $settings['fields'] : ['KeywordText', 'KeywordMatchType', 'Id'];
+        $orders = !empty($settings['order']) ? $settings['order'] : ['KeywordText', 'ASCENDING'];
+
+        // Get the service, which loads the required classes.
+        $adGroupCriterionService =
+            $user->GetService('AdGroupCriterionService', $adVersion);
+
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = $fields;
+
+        // Create predicates.
+        $selector->predicates[] = new \Predicate('AdGroupId', 'IN', $adGroupId);
+        $selector->predicates[] =
+            new \Predicate('CriteriaType', 'IN', array('KEYWORD'));
+
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+
+        do {
+            // Make the get request.
+            $page = $adGroupCriterionService->get($selector);
+
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $adGroupCriterion) {
+                    printf("Keyword with text '%s', match type '%s', and ID '%s' was "
+                        . "found.\n", $adGroupCriterion->criterion->text,
+                        $adGroupCriterion->criterion->matchType,
+                        $adGroupCriterion->criterion->id);
+                }
+            } else {
+                print "No keywords were found.\n";
+            }
+
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+    }
+
+    /**
+     * Set new bid in keyword
+     * @author Nechaev Aleksand
+     *
+     * @param integer $keywordId
+     * @param integer $groupId
+     * @param number $bidAmmount
+     * @param \AdWordsUser $user
+     * @return null
+     */
+    static function setBid($adVersion, $keywordId, $groupId, $bidAmmount, \AdWordsUser $user){
+
+
+            $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+
+            $adGroupCriterion = new \BiddableAdGroupCriterion();
+            $adGroupCriterion->adGroupId = $groupId;
+            $adGroupCriterion->criterion = new \Criterion($keywordId);
+
+            $bid = new \CpcBid();
+            $maxCpc = $bidAmmount * 1000000;
+            $bid->bid = new \Money($maxCpc);
+            $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+            $biddingStrategyConfiguration->bids[] = $bid;
+            $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+
+            $operation = new \AdGroupCriterionOperation();
+            $operation->operand = $adGroupCriterion;
+            $operation->operator = 'SET';
+            $operations = array($operation);
+
+            $result = $adGroupCriterionService->mutate($operations);
+
+            $adGroupCriterion = $result->value[0];
+
+        return ($adGroupCriterion) ? $adGroupCriterion : false;
     }
 }
