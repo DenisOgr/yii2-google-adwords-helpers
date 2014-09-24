@@ -66,7 +66,7 @@ class ReportUtils  extends \ReportUtils{
 
             } catch(\Exception $e){
 
-                if ($e->getCode() == 400) {
+                if ($e->getCode() == 500) {
                     $lastIteration++;
 
                     if ($lastIteration < ReportUtils::ATTEMPS) {
