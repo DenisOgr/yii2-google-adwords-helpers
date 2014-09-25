@@ -105,4 +105,15 @@ class Common {
 
         return  array_combine($keys, $values);
     }
+
+    /**
+     * Return uniq ID for keyword
+     * @param string $keywordId
+     * @param string $groupId
+     * @return string
+     */
+    public static function getKeywordGroup($keywordId, $groupId)
+    {
+        return "{$keywordId}-{$groupId}";
+    }
 } 
