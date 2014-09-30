@@ -66,13 +66,14 @@ class ReportUtils  extends \ReportUtils{
 
             } catch(\Exception $e){
 
-                if ($e->getCode() >= 500 && $e->getCode() < 600) {
+                //if errror 5xx or 0, waiting and trying else
+                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 0) {
                     $lastIteration++;
 
                     if ($lastIteration < ReportUtils::ATTEMPS) {
                         $throwException = false;
                         \Yii::info($reportQuery,self::CATEGORY);
-                        sleep(mt_rand(10, 35));
+                        sleep(mt_rand(15, 45));
                     }
                 }
 
