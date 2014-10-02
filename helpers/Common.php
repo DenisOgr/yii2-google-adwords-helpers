@@ -99,11 +99,14 @@ class Common {
         $keys   = array_keys($array);
         $values = array_values($array);
 
-        for ($i=0; $i < count($replacement_keys); $i++) {
-            $keys[$i] = $replacement_keys[$i];
+        for ($i=0; $i < count($keys); $i++) {
+            if(!empty($replacement_keys[$i])) {
+                $keys[$i] =  $replacement_keys[$i];
+
+            }
         }
 
-        return  array_combine($keys, $values);
+        return array_combine($keys, $values);
     }
 
     /**
