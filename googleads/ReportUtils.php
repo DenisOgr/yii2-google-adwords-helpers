@@ -66,8 +66,14 @@ class ReportUtils  extends \ReportUtils{
 
             } catch(\Exception $e){
 
-                //if errror 5xx or 0, waiting and trying else
-                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 0) {
+                //if errror 5xx or 0 or 8, waiting and trying else
+                /* These exceptions are thrown with a random order. I can not keep track of them and support google says nothing.
+                 * 5xx - error on google server.
+                 * 0 - couldn't connect to host
+                 * 8 - this exception: Undefined property: stdClass::$ApiError
+                 *
+                 * */
+                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 0 || $e->getCode() == 8) {
                     $lastIteration++;
 
                     if ($lastIteration < ReportUtils::ATTEMPS) {
