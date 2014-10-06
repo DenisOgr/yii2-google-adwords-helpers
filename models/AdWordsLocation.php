@@ -12,12 +12,20 @@ class AdWordsLocation {
     public $account;
     public $campaign;
     public $group;
+    public $clientNumber;
 
-    public function  __construct($account, $campaign, $group){
+    /**
+     * @param $account
+     * @param $campaign
+     * @param $group
+     * @param null $clientNumber
+     */
+    public function  __construct($account, $campaign, $group, $clientNumber = null){
 
-        $this->account  = $account;
-        $this->campaign = $campaign;
-        $this->group    = $group;
+        $this->account         = $account;
+        $this->campaign        = $campaign;
+        $this->group           = $group;
+        $this->clientNumber    = $clientNumber;
 
     }
 
