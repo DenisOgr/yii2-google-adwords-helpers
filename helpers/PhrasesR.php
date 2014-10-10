@@ -138,11 +138,11 @@ class PhrasesR {
             {
                 if ($br_count == 0)		# If nothing opened
                 {
-                    throw new Exception('Closing bracket without opening');#Exception
+                    throw new \Exception('Closing bracket without opening');#Exception
                 }
                 if(array_search($bracket_list[$br_count], self::$op_br) != array_search($str_chars[$work_pos], self::$cl_br))  # If opened and closed bracket don't match
                 {
-                    throw new Exception('Non matching brackets');
+                    throw new \Exception('Non matching brackets');
                 }
 
                 $br_count = $br_count - 1; # Closed bracket - less opened
@@ -157,7 +157,7 @@ class PhrasesR {
 
         if ($br_count > 0)	# If any opening bracket left unclosed
         {
-            throw new Exception('Missed closing brackets');
+            throw new \Exception('Missed closing brackets');
         }
 
         if (!$has_br)			# If no brackets at all - fixed string
