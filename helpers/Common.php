@@ -119,4 +119,26 @@ class Common {
     {
         return "{$keywordId}-{$groupId}";
     }
+
+    /**
+     * Get params from google url
+     * @param $w
+     * @return array
+     */
+    public static function googleEncode($w){
+        $w=substr($w,strpos($w,'search?')+7);
+        $ar=explode('&',str_replace('?q=','&q=',$w));
+        $q='';
+        $cd='';
+        for($i=0;$i<count($ar);$i++){
+            $pos=strpos($ar[$i],'=');
+            $str=substr($ar[$i],0,$pos);
+            if($str=='q'){
+                $q=substr($ar[$i],$pos+1);
+            }elseif($str=='cd'){
+                $cd=substr($ar[$i],$pos+1);
+            }
+        }
+        return array('q'=>urldecode($q),'cd'=>$cd);
+    }
 } 
