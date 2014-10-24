@@ -104,12 +104,15 @@ class Keyword {
 
         // Create predicates.
         $selector->predicates[] = new \Predicate('AdGroupId', 'IN', $adGroupId);
+        if (isset($settings['keywordsIds'])) {
+            $selector->predicates[] = new \Predicate('Id', 'IN', $settings['keywordsIds']);
+        }
         $selector->predicates[] =
             new \Predicate('CriteriaType', 'IN', array('KEYWORD'));
 
         // Create paging controls.
         $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
-
+        $result = [];
         do {
             // Make the get request.
             $page = $adGroupCriterionService->get($selector);
@@ -117,18 +120,24 @@ class Keyword {
             // Display results.
             if (isset($page->entries)) {
                 foreach ($page->entries as $adGroupCriterion) {
-                    printf("Keyword with text '%s', match type '%s', and ID '%s' was "
+                    $info             = get_object_vars($adGroupCriterion->criterion);
+                    $info['group_id'] = $adGroupCriterion->adGroupId;
+                    $result[] = $info;
+
+                    /*printf("Keyword with text '%s', match type '%s', and ID '%s' was "
                         . "found.\n", $adGroupCriterion->criterion->text,
                         $adGroupCriterion->criterion->matchType,
-                        $adGroupCriterion->criterion->id);
+                        $adGroupCriterion->criterion->id);*/
                 }
             } else {
-                print "No keywords were found.\n";
+                //print "No keywords were found.\n";
             }
 
             // Advance the paging index.
             $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
         } while ($page->totalNumEntries > $selector->paging->startIndex);
+
+        return $result;
     }
 
     /**
