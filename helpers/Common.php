@@ -220,7 +220,8 @@ class Common {
         ];
 
         $string = strtr($string, $table);
-        $string = preg_replace('/[^A-Za-z0-9+_!#$%^&*\)\(\:;-]/', '', $string);
+        $string = preg_replace('/[^A-Za-z0-9+_ !#$%^&*\)\(\:;-]/', '', $string);
+        $string = trim(preg_replace('/ {2,}/', ' ', $string));
 
         return $string;
     }
