@@ -143,6 +143,28 @@ class Common {
     }
 
     /**
+     * Get params from yahoo url
+     * @param $w
+     * @return array
+     */
+    public static function yahooEncode($w){
+        $w=substr($w,strpos($w,'search?')+7);
+        $ar=explode('&',str_replace('?p=','&p=',$w));
+        $q='';
+        $cd='';
+        for($i=0;$i<count($ar);$i++){
+            $pos=strpos($ar[$i],'=');
+            $str=substr($ar[$i],0,$pos);
+            if($str=='p'){
+                $q=substr($ar[$i],$pos+1);
+            }elseif($str=='cd'){
+                $cd=substr($ar[$i],$pos+1);
+            }
+        }
+        return array('p'=>urldecode($q),'cd'=>$cd);
+    }
+
+    /**
      * Convert characters to normal
      * @param $string
      * @return string
