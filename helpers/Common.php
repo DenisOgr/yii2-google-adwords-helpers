@@ -120,6 +120,26 @@ class Common {
         return "{$keywordId}-{$groupId}";
     }
 
+
+    public static function searchEncode($url)
+    {
+        $result = parse_url($url);
+        parse_str($result['query'],$result);
+        return $result;
+    }
+
+    public static function getKeyword($url)
+    {
+        $keyword = null;
+        $params = self::searchEncode($url);
+
+        if (isset($params['q'])) {
+            $keyword = $params['q'];
+        } elseif(isset($params['p'])) {
+            $keyword = $params['p'];
+        }
+        return $keyword;
+    }
     /**
      * Get params from google url
      * @param $w
