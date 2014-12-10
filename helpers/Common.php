@@ -124,8 +124,12 @@ class Common {
     public static function searchEncode($url)
     {
         $result = parse_url($url);
-        parse_str($result['query'],$result);
-        return $result;
+
+        if(isset($result['query'])) {
+            parse_str($result['query'],$result);
+            return $result;
+        }
+        return null;
     }
 
     public static function getKeyword($url)
