@@ -53,4 +53,122 @@ class Group {
         // Display result.
         return $result->value;
     }
+
+    public static function getAdGroups($adVersion, \AdWordsUser $user, $campaignId, $adGroupId = null) {
+        $adGroups = null;
+
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupService', $adVersion);
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = array('Id', 'Name');
+        $selector->ordering[] = new \OrderBy('Name', 'ASCENDING');
+        // Create predicates.
+        $selector->predicates[] = new \Predicate('CampaignId', 'IN', array($campaignId));
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+        do {
+            // Make the get request.
+            $page = $adGroupService->get($selector);
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $adGroup) {
+//                    $adGroups[] = $adGroup;
+                    if (is_null($adGroupId)){
+                        $adGroups[] = ['id' => $adGroup->id, 'name' => $adGroup->name];
+                    } elseif ($adGroup->id == $adGroupId) {
+                        $adGroups = ['id' => $adGroup->id, 'name' => $adGroup->name];
+                        break;
+                    }
+                }
+            }
+
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+
+        return $adGroups;
+    }
+
+    public static function addAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId, $listId) {
+        // Get the AdGroupCriterionService, which loads the required classes.
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        // Create biddable ad group criterion for gender
+
+        $userList = new \CriterionUserList();
+        $userList->userListId = $listId;
+        $userListAdGroupCriterion = new \BiddableAdGroupCriterion();
+        $userListAdGroupCriterion->adGroupId = $adGroupId;
+        $userListAdGroupCriterion->criterion = $userList;
+
+        $adGroupCriterionOperation = new \AdGroupCriterionOperation();
+        $adGroupCriterionOperation->operand = $userListAdGroupCriterion;
+        $adGroupCriterionOperation->operator = 'ADD';
+        $operations[] = $adGroupCriterionOperation;
+        // Make the mutate request.
+        $result = $adGroupCriterionService->mutate($operations);
+        // Display results.
+        foreach ($result->value as $adGroupCriterion) {
+            printf("Ad group criterion with ad group ID '%s', criterion ID '%s' " .
+                "and type '%s' was added.\n", $adGroupCriterion->adGroupId, $adGroupCriterion->criterion->id, $adGroupCriterion->criterion->CriterionType);
+        }
+    }
+
+    public static function updateAdGroupTarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $data) {
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupService', $adVersion);
+
+        // Create ad group using an existing ID.
+        $adGroup = new \AdGroup();
+        $adGroup->id = $adGroupId;
+
+        $targetingSetting = new \TargetingSetting();
+        $targetingSetting->details[] =  new \TargetingSettingDetail($target, $data);
+        $adGroup->settings[] = $targetingSetting;
+
+        // Create operation.
+        $operation = new \AdGroupOperation();
+        $operation->operand = $adGroup;
+        $operation->operator = 'SET';
+
+        $operations = array($operation);
+
+        // Make the mutate request.
+        $result = $adGroupService->mutate($operations);
+
+        // Display result.
+        $adGroup = $result->value[0];
+        echo("Ad group with ID " . $adGroup->id);
+    }
+
+    public static function getAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId) {
+        $list = [];
+
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupCriterionService', $adVersion);
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = array('AdGroupId', 'UserListId', 'UserListName');
+        $selector->ordering[] = new \OrderBy('UserListName', 'ASCENDING');
+        // Create predicates.
+        $selector->predicates[] = new \Predicate('AdGroupId', 'IN', array($adGroupId));
+        $selector->predicates[] = new \Predicate('CriteriaType', 'IN', array('USER_LIST'));
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+        do {
+            // Make the get request.
+            $page = $adGroupService->get($selector);
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $userList) {
+                    $list[] = ['id' => $userList->criterion->userListId, 'name' => $userList->criterion->userListName];
+                }
+            }
+
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+
+        return $list;
+    }
 } 
