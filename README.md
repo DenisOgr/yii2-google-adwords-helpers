@@ -10,13 +10,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist denisog/yii2-google-adwords-helpers "*"
+php composer.phar require --prefer-dist denisogr/yii2-google-adwords-helpers "dev-master"
 ```
 
 or add
 
 ```
-"denisog/yii2-google-adwords-helpers": "*"
+"denisogr/yii2-google-adwords-helpers": "dev-master"
 ```
 
 to the require section of your `composer.json` file.
