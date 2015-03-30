@@ -4,6 +4,7 @@
     "type": "yii2-extension",
     "keywords": ["yii2","extension","google","adwords "],
     "license": "GPL-2.0+",
+    "minimum-stability": "dev",
     "require": {
         "php": ">=5.4.0",
         "googleads/googleads-php-lib": "dev-master",
