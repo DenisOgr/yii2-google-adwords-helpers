@@ -107,6 +107,13 @@ class Keyword {
         if (isset($settings['keywordsIds'])) {
             $selector->predicates[] = new \Predicate('Id', 'IN', $settings['keywordsIds']);
         }
+        if (isset($settings['keywordText'])) {
+            $selector->predicates[] = new \Predicate('KeywordText', 'IN', $settings['keywordText']);
+        }
+        if (isset($settings['matchType'])) {
+            $selector->predicates[] = new \Predicate('KeywordMatchType', 'IN', $settings['matchType']);
+        }
+        
         $selector->predicates[] =
             new \Predicate('CriteriaType', 'IN', array('KEYWORD'));
 
