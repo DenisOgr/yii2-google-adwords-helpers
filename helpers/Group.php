@@ -9,6 +9,8 @@
 namespace denisog\gah\helpers;
 
 
+use common\models\GoogleGroups;
+
 class Group {
     public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName) {
 
@@ -170,5 +172,47 @@ class Group {
         } while ($page->totalNumEntries > $selector->paging->startIndex);
 
         return $list;
+    }
+
+    /**
+     * Update bid
+     * @param $adVersion
+     * @param GoogleGroups $group
+     * @param $bidAmmount
+     * @param \AdWordsUser $user
+     * @return mixed
+     */
+    public static function updateBid($adVersion, GoogleGroups $group, $bidAmmount, \AdWordsUser $user)
+    {
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupService', $adVersion);
+        $bidAmmount = round($bidAmmount, 2);
+
+        // Create ad group using an existing ID.
+        $adGroup = new \AdGroup();
+        $adGroup->id = $group->id;
+
+        // Update the bid.
+        $bid = new \CpcBid();
+        $bid->bid =  new \Money($bidAmmount * \AdWordsConstants::MICROS_PER_DOLLAR);
+        $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+        $biddingStrategyConfiguration->bids[] = $bid;
+        $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+
+        // Create operation.
+        $operation = new \AdGroupOperation();
+        $operation->operand = $adGroup;
+        $operation->operator = 'SET';
+
+        $operations = array($operation);
+
+        // Make the mutate request.
+        return $adGroupService->mutate($operations);
+
+        // Display result.
+//        $adGroup = $result->value[0];
+//        printf("Ad group with ID '%s' has updated default bid '$%s'.\n", $adGroup->id,
+//            $adGroup->biddingStrategyConfiguration->bids[0]->bid->microAmount /
+//            \AdWordsConstants::MICROS_PER_DOLLAR);
     }
 } 
