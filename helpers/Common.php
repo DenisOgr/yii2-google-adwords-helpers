@@ -74,7 +74,7 @@ class Common {
         }
         //get keys
         if (empty($keys)) {
-            $keys = $result[1];
+            $keys = isset($settings['removeFirst']) ? $result[1] : $result[0];
         }
         unset($result[1]);
 
