@@ -79,10 +79,14 @@ class Common {
         if(isset($settings['numberHeader'])) {
             $keys = range(0, count($firstKey));
         }
-
-        //get keys
+        
+         //get keys
         if (empty($keys)) {
             $keys = $result[$firstKey];
+        }
+
+        //isset header
+        if(!isset($settings['numberHeader'])) {
             unset($result[$firstKey]);
         }
 
