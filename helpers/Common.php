@@ -72,11 +72,20 @@ class Common {
         if (isset($settings['removeFirst'])) {
             unset($result[0]);
         }
+
+        reset($result);
+        $firstKey = key($result);
+
+        if(isset($settings['numberHeader'])) {
+            $keys = range(0, count($firstKey));
+        }
+
         //get keys
         if (empty($keys)) {
-            $keys = isset($settings['removeFirst']) ? $result[1] : $result[0];
+            $keys = $result[$firstKey];
+            unset($result[$firstKey]);
         }
-        unset($result[1]);
+
 
         if (!empty($result)) {
             foreach ($result as $key => $value) {
