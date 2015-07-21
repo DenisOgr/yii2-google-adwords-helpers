@@ -360,9 +360,10 @@ class PhrasesR {
 
     /**
      * @param array $input входящий массив массивов с развными вариантами.
+     * @param bool $duplicates
      * @return array $output
      */
-    public static function cartesian(array $input) {
+    public static function cartesian(array $input, $duplicates = true) {
         $result = array();
 
         while (list($key, $values) = each($input)) {
@@ -390,27 +391,22 @@ class PhrasesR {
                 $append = array();
 
                 foreach($result as &$product) {
-                    // Do step 1 above. array_shift is not the most efficient, but
-                    // it allows us to iterate over the rest of the items with a
-                    // simple foreach, making the code short and easy to read.
-                    $product[$key] = array_shift($values);
-
                     // $product is by reference (that's why the key we added above
                     // will appear in the end result), so make a copy of it here
                     $copy = $product;
 
                     // Do step 2 above.
                     foreach($values as $item) {
-                        $copy[$key] = $item;
-                        $append[] = $copy;
+                        if ($duplicates || (!in_array($item, $copy))) {
+                                $forInsert = $copy;
+                                $forInsert[$key] = $item;
+                                $append[] = $forInsert;
+                        }
                     }
-
-                    // Undo the side effecst of array_shift
-                    array_unshift($values, $product[$key]);
                 }
 
                 // Out of the foreach, we can add to $results now
-                $result = array_merge($result, $append);
+                $result = $append;
             }
         }
 
