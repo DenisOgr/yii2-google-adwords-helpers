@@ -57,20 +57,43 @@ class Common {
             throw new \Exception('Not exist csv file', 500);
         }
         $result = [];
+        
+        $defParams = [
+            'length' => 0,
+            'delimiter' => ',',
+            'removeLast' => false,
+            'removeFirst' => false,
+            'numberHeader' => false
+        ];
+        
+        $settings = (!empty($settings)) ? self::arrayExtends($settings, $defParams) : $defParams;
+        
         $file = fopen($fileToPath, 'r');
-        while (($line = fgetcsv($file)) !== FALSE) {
+        while (($line = fgetcsv($file, $settings['length'], $settings['delimiter'])) !== FALSE) {
             $result[] = $line;
         }
         fclose($file);
 
         //removing last
         if (isset($settings['removeLast'])) {
-            unset($result[count($result)-1]);
+            if (is_int($settings['removeLast'])) {
+                for ($i = count($result); $i > (count($result) - $settings['removeLast']); $i--) {
+                    unset($result[count($result)-$i]);
+                }
+            } else {
+                unset($result[count($result)-1]);
+            }
         }
 
         //removing first
         if (isset($settings['removeFirst'])) {
-            unset($result[0]);
+            if (is_int($settings['removeFirst'])) {
+                for ($i = 0; $i < $settings['removeFirst']; $i++) {
+                    unset($result[$i]);
+                }
+            } else {
+                unset($result[0]);
+            }
         }
 
         reset($result);
@@ -283,5 +306,20 @@ class Common {
         $string = trim(preg_replace('/ {2,}/', ' ', $string));
 
         return $string;
+    }
+    
+    /**
+     * Adding default params to your array if they are weren't set
+     *
+     * @param array $data: your array params
+     * @param array $defautData: default array params
+     * @return array
+     */
+    public static function arrayExtends($data, $defautData) {
+        $result = array();
+        foreach($defautData as $key => $val) {
+            $result[$key] = isset($data[$key]) ? $data[$key] : $val;
+        }
+        return $result;
     }
 }
