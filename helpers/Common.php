@@ -95,11 +95,11 @@ class Common {
                 unset($result[0]);
             }
         }
-
+        
         reset($result);
         $firstKey = key($result);
 
-        if(isset($settings['numberHeader'])) {
+        if(isset($settings['numberHeader']) && $settings['numberHeader']) {
             $keys = range(0, count($firstKey));
         }
         
@@ -112,7 +112,6 @@ class Common {
         if(!isset($settings['numberHeader'])) {
             unset($result[$firstKey]);
         }
-
 
         if (!empty($result)) {
             foreach ($result as $key => $value) {
