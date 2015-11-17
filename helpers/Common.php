@@ -307,7 +307,7 @@ class Common {
     }
     
     /**
-     * Adding default params to your array if they are weren't set
+     * Init default settings
      *
      * @param array $data: your array params
      * @param array $defautData: default array params
