@@ -45,8 +45,15 @@ class Common {
 
     /**
      * @param $fileToPath
-     * @param array $keys
-     * @param array $settings
+     * @param array $keys - for create associate array
+     * @param array $settings - array [
+     *      length - string length. Must be greater than the longest line (in characters)
+     *           to be found in the CSV file
+     *      delimiter - the optional delimiter parameter sets the field delimiter ('.', ',', "\t" etc.)
+     *      removeFirst - remove ... lines from the beginning of the file
+     *      removeLast - remove ... lines from the end of the file
+     *      numberHeader - revert return array keys to integer numbers
+     * ]
      * @return array
      * @throws Exception
      */
@@ -57,26 +64,41 @@ class Common {
             throw new \Exception('Not exist csv file', 500);
         }
         $result = [];
+        
+        $defParams = [
+            'length' => 0,
+            'delimiter' => ',',
+            'removeLast' => 0,
+            'removeFirst' => 0,
+            'numberHeader' => false
+        ];
+        
+        $settings = (!empty($settings)) ? self::arrayExtends($settings, $defParams) : $defParams;
+        
         $file = fopen($fileToPath, 'r');
-        while (($line = fgetcsv($file)) !== FALSE) {
+        while (($line = fgetcsv($file, $settings['length'], $settings['delimiter'])) !== FALSE) {
             $result[] = $line;
         }
         fclose($file);
 
         //removing last
         if (isset($settings['removeLast'])) {
-            unset($result[count($result)-1]);
+            for ($i = count($result); $i > (count($result) - $settings['removeLast']); $i--) {
+                unset($result[count($result)-$i]);
+            }
         }
 
         //removing first
         if (isset($settings['removeFirst'])) {
-            unset($result[0]);
+            for ($i = 0; $i < $settings['removeFirst']; $i++) {
+                unset($result[$i]);
+            }
         }
-
+        
         reset($result);
         $firstKey = key($result);
 
-        if(isset($settings['numberHeader'])) {
+        if(isset($settings['numberHeader']) && $settings['numberHeader']) {
             $keys = range(0, count($firstKey));
         }
         
@@ -89,7 +111,6 @@ class Common {
         if(!isset($settings['numberHeader'])) {
             unset($result[$firstKey]);
         }
-
 
         if (!empty($result)) {
             foreach ($result as $key => $value) {
@@ -283,5 +304,20 @@ class Common {
         $string = trim(preg_replace('/ {2,}/', ' ', $string));
 
         return $string;
+    }
+    
+    /**
+     * Init default settings
+     *
+     * @param array $data: your array params
+     * @param array $defautData: default array params
+     * @return array
+     */
+    public static function arrayExtends($data, $defautData) {
+        $result = [];
+        foreach($defautData as $key => $val) {
+            $result[$key] = isset($data[$key]) ? $data[$key] : $val;
+        }
+        return $result;
     }
 }
