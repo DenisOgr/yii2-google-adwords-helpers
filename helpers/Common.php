@@ -45,8 +45,15 @@ class Common {
 
     /**
      * @param $fileToPath
-     * @param array $keys
-     * @param array $settings
+     * @param array $keys - for create associate array
+     * @param array $settings - array [
+     *      length - string length. Must be greater than the longest line (in characters)
+     *           to be found in the CSV file
+     *      delimiter - the optional delimiter parameter sets the field delimiter ('.', ',', "\t" etc.)
+     *      removeFirst - remove ... lines from the beginning of the file
+     *      removeLast - remove ... lines from the end of the file
+     *      numberHeader - revert return array keys to integer numbers
+     * ]
      * @return array
      * @throws Exception
      */
@@ -61,8 +68,8 @@ class Common {
         $defParams = [
             'length' => 0,
             'delimiter' => ',',
-            'removeLast' => false,
-            'removeFirst' => false,
+            'removeLast' => 0,
+            'removeFirst' => 0,
             'numberHeader' => false
         ];
         
@@ -76,23 +83,15 @@ class Common {
 
         //removing last
         if (isset($settings['removeLast'])) {
-            if (is_int($settings['removeLast'])) {
-                for ($i = count($result); $i > (count($result) - $settings['removeLast']); $i--) {
-                    unset($result[count($result)-$i]);
-                }
-            } else {
-                unset($result[count($result)-1]);
+            for ($i = count($result); $i > (count($result) - $settings['removeLast']); $i--) {
+                unset($result[count($result)-$i]);
             }
         }
 
         //removing first
         if (isset($settings['removeFirst'])) {
-            if (is_int($settings['removeFirst'])) {
-                for ($i = 0; $i < $settings['removeFirst']; $i++) {
-                    unset($result[$i]);
-                }
-            } else {
-                unset($result[0]);
+            for ($i = 0; $i < $settings['removeFirst']; $i++) {
+                unset($result[$i]);
             }
         }
         
@@ -315,7 +314,7 @@ class Common {
      * @return array
      */
     public static function arrayExtends($data, $defautData) {
-        $result = array();
+        $result = [];
         foreach($defautData as $key => $val) {
             $result[$key] = isset($data[$key]) ? $data[$key] : $val;
         }
