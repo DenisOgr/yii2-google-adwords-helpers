@@ -83,8 +83,8 @@ class Common {
 
         //removing last
         if (isset($settings['removeLast'])) {
-            for ($i = count($result); $i > (count($result) - $settings['removeLast']); $i--) {
-                unset($result[count($result)-$i]);
+            for ($i = (count($result) - $settings['removeLast']); $i <= count($result); $i++) {
+                unset($result[$i]);
             }
         }
 
