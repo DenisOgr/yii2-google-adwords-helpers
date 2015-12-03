@@ -64,7 +64,7 @@ class Common {
             throw new \Exception('Not exist csv file', 500);
         }
         $result = [];
-        
+
         $defParams = [
             'length' => 0,
             'delimiter' => ',',
@@ -72,9 +72,9 @@ class Common {
             'removeFirst' => 0,
             'numberHeader' => false
         ];
-        
+
         $settings = (!empty($settings)) ? self::arrayExtends($settings, $defParams) : $defParams;
-        
+
         $file = fopen($fileToPath, 'r');
         while (($line = fgetcsv($file, $settings['length'], $settings['delimiter'])) !== FALSE) {
             $result[] = $line;
@@ -94,14 +94,14 @@ class Common {
                 unset($result[$i]);
             }
         }
-        
+
         reset($result);
         $firstKey = key($result);
 
         if(isset($settings['numberHeader']) && $settings['numberHeader']) {
             $keys = range(0, count($firstKey));
         }
-        
+
          //get keys
         if (empty($keys)) {
             $keys = $result[$firstKey];
@@ -305,7 +305,7 @@ class Common {
 
         return $string;
     }
-    
+
     /**
      * Init default settings
      *
