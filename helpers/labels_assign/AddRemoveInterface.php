@@ -10,6 +10,10 @@ namespace denisog\gah\helpers\labels_assign;
 
 interface AddRemoveInterface
 {
+    const ACTION_ADD    = 'ADD';
+    const ACTION_REMOVE = 'REMOVE';
+    const ACTION_SET    = 'SET';
+
     public static function add(array $entities, $labelId, \AdWordsUser $user, $adVersion);
     public static function remove(array $entities, $labelId, \AdWordsUser $user, $adVersion);
     public static function update(array $entities, $labelId, \AdWordsUser $user, $adVersion);

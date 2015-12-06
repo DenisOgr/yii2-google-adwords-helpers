@@ -11,19 +11,20 @@ namespace denisog\gah\helpers\labels_assign;
 class LabelToCampaign implements AddRemoveInterface
 {
 
+
     public static function add(array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
-        return self::action('ADD', $entities, $labelId, $user, $adVersion);
+        return self::action(self::ACTION_ADD, $entities, $labelId, $user, $adVersion);
     }
 
     public static function remove(array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
-        return self::action('REMOVE', $entities, $labelId, $user, $adVersion);
+        return self::action(self::ACTION_REMOVE, $entities, $labelId, $user, $adVersion);
     }
 
     public static function update(array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
-        return self::action('SET', $entities, $labelId, $user, $adVersion);
+        return self::action(self::ACTION_SET, $entities, $labelId, $user, $adVersion);
     }
 
     protected static function action($typeOperation, array $entities, $labelId, \AdWordsUser $user, $adVersion)

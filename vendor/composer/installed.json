@@ -1,0 +1,144 @@
+[
+    {
+        "name": "googleads/googleads-php-lib",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/googleads/googleads-php-lib.git",
+            "reference": "fdb07af38adc281c78ce81dc47baeb6ad1086aa9"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/googleads/googleads-php-lib/zipball/fdb07af38adc281c78ce81dc47baeb6ad1086aa9",
+            "reference": "fdb07af38adc281c78ce81dc47baeb6ad1086aa9",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "time": "2015-11-19 19:14:17",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "src/Google/Api/Ads/AdWords/Lib",
+                "src/Google/Api/Ads/Dfp/Lib"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "include-path": [
+            "src/"
+        ],
+        "license": [
+            "Apache-2.0"
+        ],
+        "authors": [
+            {
+                "name": "Vincent Tsao",
+                "role": "Developer"
+            }
+        ],
+        "description": "Google Ads APIs Client Library for PHP (AdWords, Adx, and DFP)",
+        "homepage": "https://github.com/googleads/googleads-php-lib"
+    },
+    {
+        "name": "pear/pear_exception",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/pear/PEAR_Exception.git",
+            "reference": "8c18719fdae000b690e3912be401c76e406dd13b"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/pear/PEAR_Exception/zipball/8c18719fdae000b690e3912be401c76e406dd13b",
+            "reference": "8c18719fdae000b690e3912be401c76e406dd13b",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=4.4.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "*"
+        },
+        "time": "2015-02-10 20:07:52",
+        "type": "class",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.0.x-dev"
+            }
+        },
+        "installation-source": "source",
+        "autoload": {
+            "psr-0": {
+                "PEAR": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "include-path": [
+            "."
+        ],
+        "license": [
+            "BSD-2-Clause"
+        ],
+        "authors": [
+            {
+                "name": "Helgi Thormar",
+                "email": "dufuz@php.net"
+            },
+            {
+                "name": "Greg Beaver",
+                "email": "cellog@php.net"
+            }
+        ],
+        "description": "The PEAR Exception base class.",
+        "homepage": "https://github.com/pear/PEAR_Exception",
+        "keywords": [
+            "exception"
+        ]
+    },
+    {
+        "name": "pear/math_combinatorics",
+        "version": "dev-trunk",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/pear/Math_Combinatorics.git",
+            "reference": "fcd446c3286db49334e3e6346ee24730a5594dc8"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/pear/Math_Combinatorics/zipball/fcd446c3286db49334e3e6346ee24730a5594dc8",
+            "reference": "fcd446c3286db49334e3e6346ee24730a5594dc8",
+            "shasum": ""
+        },
+        "require": {
+            "pear/pear_exception": "*"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "*"
+        },
+        "time": "2014-02-21 11:51:02",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "./"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL"
+        ],
+        "authors": [
+            {
+                "name": "David Sanders",
+                "email": "shangxiao@php.net",
+                "role": "Lead"
+            }
+        ],
+        "description": "More info available on: http://pear.php.net/package/Math_Combinatorics"
+    }
+]
