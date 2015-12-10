@@ -28,22 +28,24 @@ class LabelToGroup implements AddRemoveInterface
     protected static function action($typeOperation, array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
         $service = $user->GetService('AdGroupService', $adVersion, null, null, null, true);
-        $operations = [];
+        $result = [];
+        foreach (array_chunk($entities, self::COUNT_ENTITY_IN_CHUNK) as $chunkNumber => $entityInChunk) {
+            $operations = [];
+            foreach ($entityInChunk as $entity) {
+                $entity =!is_array($entity) ? $entity->attributes : $entity;
+                $label = new \AdGroupLabel();
+                $label->adGroupId = $entity['id'];
+                $label->labelId = $labelId;
 
-        foreach ($entities as $entity) {
-            $label = new \AdGroupLabel();
-            $label->adGroupId = $entity->id;
-            $label->labelId = $labelId;
+                $operation = new \AdGroupLabelOperation();
+                $operation->operand = $label;
+                $operation->operator = $typeOperation;
 
-            $operation = new \AdGroupLabelOperation();
-            $operation->operand = $label;
-            $operation->operator = $typeOperation;
-
-            $operations[] = $operation;
+                $operations[] = $operation;
+            }
+            // Make the mutate request.
+            $result[$chunkNumber] = $service->mutateLabel($operations);
         }
-
-        // Make the mutate request.
-        $result = $service->mutateLabel($operations);
-        return $result->value;
+        return $result;
     }
 }

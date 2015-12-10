@@ -30,23 +30,27 @@ class LabelToCampaign implements AddRemoveInterface
     protected static function action($typeOperation, array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
         $service = $user->GetService('CampaignService', $adVersion, null, null, null, true);
-        $operations = [];
+        $result = [];
 
-        foreach ($entities as $entity) {
-            $campaignLabel = new \CampaignLabel();
-            $campaignLabel->campaignId = $entity->id;
-            $campaignLabel->labelId = $labelId;
+        foreach (array_chunk($entities, self::COUNT_ENTITY_IN_CHUNK) as $chunkNumber => $entityInChunk) {
+            $operations = [];
+            foreach ($entityInChunk as $entity) {
+                $entity =!is_array($entity) ? $entity->attributes : $entity;
+                $campaignLabel = new \CampaignLabel();
+                $campaignLabel->campaignId = $entity['id'];
+                $campaignLabel->labelId = $labelId;
 
-            $operation = new \CampaignLabelOperation();
-            $operation->operand = $campaignLabel;
-            $operation->operator = $typeOperation;
+                $operation = new \CampaignLabelOperation();
+                $operation->operand = $campaignLabel;
+                $operation->operator = $typeOperation;
 
-            $operations[] = $operation;
+                $operations[] = $operation;
+            }
+
+            // Make the mutate request.
+            $result[$chunkNumber] = $service->mutateLabel($operations);
         }
-
-        // Make the mutate request.
-        $result = $service->mutateLabel($operations);
-        return $result->value;
+        return $result;
     }
 
 } 

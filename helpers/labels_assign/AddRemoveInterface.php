@@ -13,6 +13,7 @@ interface AddRemoveInterface
     const ACTION_ADD    = 'ADD';
     const ACTION_REMOVE = 'REMOVE';
     const ACTION_SET    = 'SET';
+    const COUNT_ENTITY_IN_CHUNK = 100;
 
     public static function add(array $entities, $labelId, \AdWordsUser $user, $adVersion);
     public static function remove(array $entities, $labelId, \AdWordsUser $user, $adVersion);

@@ -28,23 +28,28 @@ class LabelToKeyword implements AddRemoveInterface
     protected static function action($typeOperation, array $entities, $labelId, \AdWordsUser $user, $adVersion)
     {
         $service = $user->GetService('AdGroupCriterionService', $adVersion, null, null, null, true);
-        $operations = [];
+        $result = [];
 
-        foreach ($entities as $entity) {
-            $label = new \AdGroupCriterionLabel();
-            $label->adGroupId = $entity->group_id;
-            $label->criterionId = $entity->keyword_id;
-            $label->labelId = $labelId;
+        foreach (array_chunk($entities, self::COUNT_ENTITY_IN_CHUNK) as $chunkNumber => $entityInChunk) {
+            $operations = [];
+            foreach ($entityInChunk as $entity) {
+                //set key
+                $entity =!is_array($entity) ? $entity->attributes : $entity;
+                $label = new \AdGroupCriterionLabel();
+                $label->adGroupId   = $entity['group_id'];
+                $label->criterionId = $entity['keyword_id'];
+                $label->labelId = $labelId;
 
-            $operation = new \AdGroupCriterionLabelOperation();
-            $operation->operand = $label;
-            $operation->operator = $typeOperation;
+                $operation = new \AdGroupCriterionLabelOperation();
+                $operation->operand = $label;
+                $operation->operator = $typeOperation;
 
-            $operations[] = $operation;
+                $operations[] = $operation;
+            }
+            // Make the mutate request.
+            $result[$chunkNumber] = $service->mutateLabel($operations);
         }
 
-        // Make the mutate request.
-        $result = $service->mutateLabel($operations);
-        return $result->value;
+        return $result;
     }
 }
