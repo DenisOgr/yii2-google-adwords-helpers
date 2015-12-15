@@ -40,15 +40,15 @@ class TextAd {
         // Make the mutate request.
         $result = $adGroupAdService->mutate($operations);
         // Display results.
-        $ids = [];
+        $items = [];
         foreach ($result->value as $adGroupAd) {
             printf("Text ad with headline '%s' and ID '%s' was added.\n",
             $adGroupAd->ad->headline, $adGroupAd->ad->id);
             
-            $ids[] = $adGroupAd->ad->id;
+            $items[] = $adGroupAd->ad;
         }
         
-        return $ids;
+        return $items;
     }
     
     public static function createAdProcess(array $textAd, $adGroupId)
