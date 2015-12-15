@@ -57,16 +57,16 @@ class TextAd {
     
     public static function createAdProcess(array $textAd, $adGroupId)
     {
-        $textAd = new \TextAd();
-        $textAd->headline = $textAd['headline'];
-        $textAd->description1 = $textAd['description1'];
-        $textAd->description2 = $textAd['description2'];
-        $textAd->displayUrl = $textAd['displayUrl'];
-        $textAd->finalUrls = array($textAd['finalUrl']);
+        $newItem = new \TextAd();
+        $newItem->headline = $textAd['headline'];
+        $newItem->description1 = $textAd['description1'];
+        $newItem->description2 = $textAd['description2'];
+        $newItem->displayUrl = $textAd['displayUrl'];
+        $newItem->finalUrls = array($textAd['finalUrl']);
         // Create ad group ad.
         $adGroupAd = new \AdGroupAd();
         $adGroupAd->adGroupId = $adGroupId;
-        $adGroupAd->ad = $textAd;
+        $adGroupAd->ad = $newItem;
         // Set additional settings (optional).
         $adGroupAd->status = $textAd['status'];
         // Create operation.
