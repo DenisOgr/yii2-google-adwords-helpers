@@ -48,10 +48,6 @@ class TextAd {
             $ids[] = $adGroupAd->ad->id;
         }
         
-        if (count($textAds) == 1) {
-            return current($ids);
-        }
-        
         return $ids;
     }
     
