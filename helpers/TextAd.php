@@ -12,10 +12,6 @@ use denisog\gah\helpers\Common;
 
 class TextAd {
 
-    const MATCH_TYPE_PHRASE = 'PHRASE';
-    const MATCH_TYPE_BROAD  = 'BROAD';
-    const MATCH_TYPE_EXACT  = 'EXACT';
-
     const MAX_LIMIT_FOR_QUERY = 2000;
 
     /**
