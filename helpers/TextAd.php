@@ -13,9 +13,10 @@ use denisog\gah\helpers\Common;
 class TextAd {
 
     const MAX_LIMIT_FOR_QUERY = 2000;
+    public $fields = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
 
     /**
-     * Create (send) keyword to google adwords
+     * Create (send) textAds to google adwords
      * @param array $textAds - textAds
      * * @param $adVersion - version
      * @param \AdWordsUser $user
@@ -50,21 +51,88 @@ class TextAd {
     public static function createAdProcess(array $textAd, $adGroupId)
     {
         $newItem = new \TextAd();
-        $newItem->headline = $textAd['headline'];
-        $newItem->description1 = $textAd['description1'];
-        $newItem->description2 = $textAd['description2'];
-        $newItem->displayUrl = $textAd['displayUrl'];
-        $newItem->finalUrls = array($textAd['finalUrl']);
+        foreach ($this->fields as $field) {
+            if (isset($textAd[$field])) {
+                if ($field = 'finalUrl') {
+                    $newItem->finalUrls = [$textAd[$field]];
+                }
+            }
+        }
         // Create ad group ad.
         $adGroupAd = new \AdGroupAd();
         $adGroupAd->adGroupId = $adGroupId;
         $adGroupAd->ad = $newItem;
         // Set additional settings (optional).
-        $adGroupAd->status = $textAd['status'];
+        if (isset($textAd['status'])) {
+            $adGroupAd->status = $textAd['status'];
+        }
         // Create operation.
         $operation = new \AdGroupAdOperation();
         $operation->operand = $adGroupAd;
         $operation->operator = 'ADD';
+        
+        return $operation;
+    }
+    
+    /**
+     * Update (send) textAds to google adwords
+     * @param array $textAds - textAds
+     * * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @param \denisog\gah\models\AdWordsLocation $location
+     * @return bool
+     */
+    static public function updateAds(array $textAds, $adGroupId, $adVersion, \AdWordsUser $user)
+    {
+        if (empty($textAds) || count($textAds) > self::MAX_LIMIT_FOR_QUERY) {
+            return false;
+        }
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        $operations = [];
+        foreach ($textAds as $textAd) {
+            $operations[] = self::updateAdProcess($textAd, $adGroupId);
+        }
+        // Make the mutate request.
+        $result = $adGroupAdService->mutate($operations);
+        // Display results.
+        $items = [];
+        foreach ($result->value as $adGroupAd) {
+            printf("Text ad with headline '%s' and ID '%s' was added.\n",
+            $adGroupAd->ad->headline, $adGroupAd->ad->id);
+            
+            $items[] = $adGroupAd->ad;
+        }
+        
+        return $items;
+    }
+    
+    public static function updateAdProcess(array $textAd, $adGroupId = false)
+    {
+        $item = new \TextAd();
+        foreach ($this->fields as $field) {
+            if (isset($textAd[$field])) {
+                if ($field == 'finalUrl') {
+                    $item->finalUrls = [$textAd[$field]];
+                } else {
+                    $item->$field = [$textAd[$field]];
+                }
+            }
+        }
+        // Create ad group ad.
+        $adGroupAd = new \AdGroupAd();
+        if ($adGroupId) {
+            $adGroupAd->adGroupId = $adGroupId;
+        }
+        $adGroupAd->ad = $newItem;
+        // Set additional settings (optional).
+        if (isset($textAd['status'])) {
+            $adGroupAd->status = $textAd['status'];
+        }
+        // Create operation.
+        $operation = new \AdGroupAdOperation();
+        $operation->operand = $adGroupAd;
+        $operation->operator = 'SET';
         
         return $operation;
     }
