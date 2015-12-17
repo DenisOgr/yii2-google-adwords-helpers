@@ -12,7 +12,7 @@ namespace denisog\gah\helpers;
 use common\models\GoogleGroups;
 
 class Group {
-    public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName) {
+    public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName, $params = []) {
 
         // Get the service, which loads the required classes.
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
@@ -25,7 +25,23 @@ class Group {
 
         // Set bids (required).
         $bid = new \CpcBid();
-        $bid->bid =  new \Money(1000000);
+        
+        if (!empty($params)) {
+            foreach ($params as $key => $val) {
+                switch ($key) {
+                    case 'bid':
+                        $bid->bid = new \Money($val*1000000);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+        
+        if (is_null($bid->bid)) {
+            $bid->bid = new \Money(1000000);
+        }
         $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
         $biddingStrategyConfiguration->bids[] = $bid;
         $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
