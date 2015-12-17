@@ -13,7 +13,7 @@ use denisog\gah\helpers\Common;
 class TextAd {
 
     const MAX_LIMIT_FOR_QUERY = 2000;
-    public $fields = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
+    public static $FIELDS = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
 
     /**
      * Create (send) textAds to google adwords
@@ -32,6 +32,8 @@ class TextAd {
         $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
         $operations = [];
         foreach ($textAds as $textAd) {
+            echo PHP_EOL . 'IN HELPER:';
+            var_dump($textAd);
             $operations[] = self::createAdProcess($textAd, $adGroupId);
         }
         // Make the mutate request.
@@ -51,7 +53,7 @@ class TextAd {
     public static function createAdProcess(array $textAd, $adGroupId)
     {
         $newItem = new \TextAd();
-        foreach ($this->fields as $field) {
+        foreach (self::$FIELDS as $field) {
             if (isset($textAd[$field])) {
                 if ($field = 'finalUrl') {
                     $newItem->finalUrls = [$textAd[$field]];
