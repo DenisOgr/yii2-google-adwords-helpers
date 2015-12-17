@@ -34,6 +34,8 @@ class TextAd {
         foreach ($textAds as $textAd) {
             echo PHP_EOL . 'IN HELPER:';
             var_dump($textAd);
+            var_dump($adGroupId);
+            die();
             $operations[] = self::createAdProcess($textAd, $adGroupId);
         }
         // Make the mutate request.
