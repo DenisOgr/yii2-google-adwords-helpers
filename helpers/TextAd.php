@@ -32,7 +32,6 @@ class TextAd {
         $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
         $operations = [];
         foreach ($textAds as $textAd) {
-            echo PHP_EOL . 'IN HELPER:';
             $operations[] = self::createAdProcess($textAd, $adGroupId);
         }
         // Make the mutate request.
