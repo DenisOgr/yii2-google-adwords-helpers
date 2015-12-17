@@ -33,9 +33,6 @@ class TextAd {
         $operations = [];
         foreach ($textAds as $textAd) {
             echo PHP_EOL . 'IN HELPER:';
-            var_dump($textAd);
-            var_dump($adGroupId);
-            die();
             $operations[] = self::createAdProcess($textAd, $adGroupId);
         }
         // Make the mutate request.
@@ -57,8 +54,10 @@ class TextAd {
         $newItem = new \TextAd();
         foreach (self::$FIELDS as $field) {
             if (isset($textAd[$field])) {
-                if ($field = 'finalUrl') {
+                if ($field == 'finalUrl') {
                     $newItem->finalUrls = [$textAd[$field]];
+                } elseif ($field != 'status') {
+                    $newItem->$field = $textAd[$field];
                 }
             }
         }
