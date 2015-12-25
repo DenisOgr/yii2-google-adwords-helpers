@@ -19,6 +19,8 @@ class Keyword {
     const SERVICE = 'AdGroupCriterionService';
 
     const MAX_LIMIT_FOR_QUERY = 2000;
+    
+    public static $FIELDS = ['id', 'status'];
 
     /**
      * Create (send) keyword to google adwords
@@ -181,6 +183,44 @@ class Keyword {
             $result = $adGroupCriterionService->mutate($operations);
 
             $adGroupCriterion = $result->value[0];
+
+        return ($adGroupCriterion) ? $adGroupCriterion : false;
+    }
+    
+    /**
+     * Update (send) keyword to google adwords
+     * @param array $keyword - example: ['id' => 1, 'status' => 'PAUSED']
+     * @param integer $adGroupId
+     * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @return bool
+     */
+    static function updateKeyword(array $keyword, $adGroupId, $adVersion, \AdWordsUser $user)
+    {
+        // Get the service, which loads the required classes.
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        // Create ad group criterion.
+        $adGroupCriterion = new \BiddableAdGroupCriterion();
+        $adGroupCriterion->adGroupId = $adGroupId;
+        // Create criterion using an existing ID. Use the base class Criterion
+        // instead of Keyword to avoid having to set keyword-specific fields.
+        if (isset($keyword['id'])) {
+            $adGroupCriterion->criterion = new \Criterion($keyword['id']);
+        }
+        if (isset($keyword['status'])) {
+            $adGroupCriterion->userStatus = $keyword['status'];
+        }
+        // Update final URL.
+        //  $adGroupCriterion->finalUrls = array('http://www.example.com/new');
+        // Create operation.
+        $operation = new \AdGroupCriterionOperation();
+        $operation->operand = $adGroupCriterion;
+        $operation->operator = 'SET';
+        $operations = [$operation];
+        // Make the mutate request.
+        $result = $adGroupCriterionService->mutate($operations);
+        // Display result.
+        $adGroupCriterion = $result->value[0];
 
         return ($adGroupCriterion) ? $adGroupCriterion : false;
     }
