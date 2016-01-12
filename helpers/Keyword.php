@@ -131,6 +131,7 @@ class Keyword {
                 foreach ($page->entries as $adGroupCriterion) {
                     $info             = get_object_vars($adGroupCriterion->criterion);
                     $info['group_id'] = $adGroupCriterion->adGroupId;
+                    $info['status']   = $adGroupCriterion->userStatus;
                     $result[] = $info;
 
                     /*printf("Keyword with text '%s', match type '%s', and ID '%s' was "
