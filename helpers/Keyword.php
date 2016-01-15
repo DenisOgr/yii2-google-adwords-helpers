@@ -6,9 +6,10 @@
  */
 
 namespace denisog\gah\helpers;
-
+//require_once '/var/www/html/marketing1/vendor/googleads/googleads-php-lib/src/Google/Api/Ads/Common/Util/ErrorUtils.php';
 use common\models\GoogleGroups;
 use denisog\gah\helpers\Common;
+use ErrorUtils;
 
 class Keyword {
 
@@ -33,56 +34,121 @@ class Keyword {
      */
     static public function create(array $keywords, $adVersion, \AdWordsUser $user,  \denisog\gah\models\AdWordsLocation $location, array $settings) {
 
-        $adGroupCriterionService =
-            $user->GetService('AdGroupCriterionService', $adVersion);
+        require_once \Yii::getAlias(
+            '@vendor/googleads/googleads-php-lib/src/Google/Api/Ads/Common/Util/ErrorUtils.php'
+        );
+        
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
 
         foreach (array_chunk($keywords, Keyword::MAX_LIMIT_FOR_QUERY) as $keywordItems) {
 
             $operations =[];
 
             foreach ($keywordItems as $keywordItem) {
-
-                // Create keyword criterion.
-                $keyword            = new \Keyword();
-                $keyword->text      = $keywordItem;
-                $keyword->matchType = (isset($settings['matchType'])) ? $settings['matchType'] : self::MATCH_TYPE_BROAD;
-
-                // Create biddable ad group criterion.
-                $adGroupCriterion            = new \BiddableAdGroupCriterion();
-                $adGroupCriterion->adGroupId = $location->group;
-                $adGroupCriterion->criterion = $keyword;
-
-                // Set additional settings (optional).
-                if (isset($settings['userStatus'])) {
-                    $adGroupCriterion->userStatus = $settings['userStatus'];
-                }
-
-                if (isset($settings['destinationUrl'])) {
-                    $adGroupCriterion->destinationUrl = $settings['destinationUrl'];
-                }
-                if (isset($settings['setBid'])) {
-                    // Set bids (optional).
-                    $bid = new \CpcBid();
-                    $bid->bid =  new \Money($settings['setBid']);
-                    $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
-                    $biddingStrategyConfiguration->bids[] = $bid;
-                    $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
-                    $adGroupCriteria[] = $adGroupCriterion;
-
-                }
-                // Create operation.
-                $operation = new \AdGroupCriterionOperation();
-                $operation->operand = $adGroupCriterion;
-                $operation->operator = 'ADD';
-                $operations[] = $operation;
+                $operations[] = self::createProcess($keywordItem, $location, $settings);
             }
-
-            // Make the mutate request.
-            $result = $adGroupCriterionService->mutate($operations);
-            sleep(1);
+            
+            try {
+                // Make the mutate request.
+                $result = $adGroupCriterionService->mutate($operations);
+                sleep(1);
+            } catch (\SoapFault $fault) {
+                $errors = ErrorUtils::GetApiErrors($fault);
+                if (sizeof($errors) == 0) {
+                    // Not an API error, so throw fault.
+                    throw $fault;
+                }
+                $operationIndicesToRemove = [];
+                foreach ($errors as $error) {
+                    if ($error->ApiErrorType == 'PolicyViolationError') {
+                        $operationIndex = ErrorUtils::GetSourceOperationIndex($error);
+                        $operation = $operations[$operationIndex];
+                        printf(
+                            "Keyword with text '%s' violated %s policy '%s'.\n",
+                            $operation->operand->criterion->text,
+                            $error->isExemptable ? 'exemptable' : 'non-exemptable',
+                            $error->externalPolicyName
+                        );
+                        if ($error->isExemptable) {
+                            // Add exemption request to the operation.
+                            printf("Adding exemption request for policy name '%s' on text "
+                                . "'%s'.\n", $error->key->policyName, $error->key->violatingText);
+                            $operation->exemptionRequests[] = new \ExemptionRequest($error->key);
+                        } else {
+                            // Remove non-exemptable operation.
+                            print "Removing the operation from the request.\n";
+                            $operationIndicesToRemove[] = $operationIndex;
+                        }
+                    } else {
+                        // Non-policy error returned, throw fault.
+                        throw $fault;
+                    }
+                }
+                $operationIndicesToRemove = array_unique($operationIndicesToRemove);
+                rsort($operationIndicesToRemove, SORT_NUMERIC);
+                foreach ($operationIndicesToRemove as $operationIndex) {
+                    unset($operations[$operationIndex]);
+                }
+            }
+            
+            $items = [];
+            if (sizeof($operations) > 0) {
+                // Retry the mutate request.
+                // Get the service, which loads the required classes.
+                $adGroupAdServiceNoValidate = $user->GetService('AdGroupCriterionService', $adVersion);
+                $result = $adGroupAdServiceNoValidate->mutate($operations);
+                // Display results.
+                foreach ($result->value as $keyword) {
+                    printf(
+                        "Keyword with headline '%s' and ID '%s' was added.\n",
+                        $keyword->criterion->text,
+                        $keyword->criterion->id
+                    );
+                    $items[] = $keyword->criterion;
+                }
+            } else {
+                print "All the operations were invalid with non-exemptable errors.\n";
+                return [];
+            }
         }
         return true;
+    }
+    
+    public static function createProcess($text, \denisog\gah\models\AdWordsLocation $location, array $settings)
+    {
+        // Create keyword criterion.
+        $keyword            = new \Keyword();
+        $keyword->text      = $text;
+        $keyword->matchType = (isset($settings['matchType'])) ? $settings['matchType'] : self::MATCH_TYPE_BROAD;
 
+        // Create biddable ad group criterion.
+        $adGroupCriterion            = new \BiddableAdGroupCriterion();
+        $adGroupCriterion->adGroupId = $location->group;
+        $adGroupCriterion->criterion = $keyword;
+
+        // Set additional settings (optional).
+        if (isset($settings['userStatus'])) {
+            $adGroupCriterion->userStatus = $settings['userStatus'];
+        }
+
+        if (isset($settings['destinationUrl'])) {
+            $adGroupCriterion->destinationUrl = $settings['destinationUrl'];
+        }
+        if (isset($settings['setBid'])) {
+            // Set bids (optional).
+            $bid = new \CpcBid();
+            $bid->bid =  new \Money($settings['setBid']);
+            $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+            $biddingStrategyConfiguration->bids[] = $bid;
+            $adGroupCriterion->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+            $adGroupCriteria[] = $adGroupCriterion;
+
+        }
+        // Create operation.
+        $operation = new \AdGroupCriterionOperation();
+        $operation->operand = $adGroupCriterion;
+        $operation->operator = 'ADD';
+        return $operation;
     }
 
 
