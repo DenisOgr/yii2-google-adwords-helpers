@@ -237,19 +237,22 @@ class Group
 //            \AdWordsConstants::MICROS_PER_DOLLAR);
     }
     
-    public static function remove($adVersion, $adGroupId, \AdWordsUser $user)
+    public static function remove($adVersion, array $adGroupIds, \AdWordsUser $user)
     {
         // Get the service, which loads the required classes.
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
-        // Create ad group with REMOVED status.
-        $adGroup = new \AdGroup();
-        $adGroup->id = $adGroupId;
-        $adGroup->status = 'REMOVED';
-        // Create operations.
-        $operation = new \AdGroupOperation();
-        $operation->operand = $adGroup;
-        $operation->operator = 'SET';
-        $operations = array($operation);
+        $operations = [];
+        foreach ($adGroupIds as $adGroupId) {
+            // Create ad group with REMOVED status.
+            $adGroup = new \AdGroup();
+            $adGroup->id = $adGroupId;
+            $adGroup->status = 'REMOVED';
+            // Create operations.
+            $operation = new \AdGroupOperation();
+            $operation->operand = $adGroup;
+            $operation->operator = 'SET';
+            $operations[] = $operation;
+        }
         // Make the mutate request.
         return $adGroupService->mutate($operations);
     }
