@@ -21,7 +21,9 @@ class Group
         $adGroup = new \AdGroup();
         $adGroup->campaignId = $campaignId;
         $adGroup->name = $groupName;
-
+        // Set additional settings (optional).
+        $adGroup->status = 'ENABLED';
+        
         // Set bids (required).
         $bid = new \CpcBid();
         
@@ -30,6 +32,9 @@ class Group
                 switch ($key) {
                     case 'bid':
                         $bid->bid = new \Money($val*1000000);
+                        break;
+                    case 'status':
+                        $adGroup->status = $val;
                         break;
 
                     default:
@@ -44,9 +49,6 @@ class Group
         $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
         $biddingStrategyConfiguration->bids[] = $bid;
         $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
-
-        // Set additional settings (optional).
-        $adGroup->status = 'ENABLED';
 
         // Targetting restriction settings - these setting only affect serving
         // for the Display Network.

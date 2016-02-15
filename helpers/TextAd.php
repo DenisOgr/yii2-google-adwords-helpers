@@ -72,6 +72,7 @@ class TextAd
                             . "'%s'.\n", $error->key->policyName, $error->key->violatingText);
                         $operation->exemptionRequests[] = new \ExemptionRequest($error->key);
                     } else {
+                        var_dump($error);
                         // Remove non-exemptable operation.
                         print "Removing the operation from the request.\n";
                         $operationIndicesToRemove[] = $operationIndex;
