@@ -16,6 +16,9 @@ class Keyword {
     const MATCH_TYPE_PHRASE = 'PHRASE';
     const MATCH_TYPE_BROAD  = 'BROAD';
     const MATCH_TYPE_EXACT  = 'EXACT';
+    
+    const STATUS_ENABLED  = 'ENABLED';
+    const STATUS_REMOVED  = 'REMOVED';
 
     const SERVICE = 'AdGroupCriterionService';
 
