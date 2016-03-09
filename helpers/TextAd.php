@@ -194,4 +194,43 @@ class TextAd
         $operation->operator = 'SET';
         return $operation;
     }
+    
+    /**
+     * Remove textAds from google adwords
+     * @param array $textAdsIds - textAd ids
+     * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @return bool
+     */
+    public static function removeAds(array $textAdsIds, $adGroupId, $adVersion, \AdWordsUser $user)
+    {
+        if (empty($textAdsIds) || count($textAdsIds) > self::MAX_LIMIT_FOR_QUERY) {
+            return false;
+        }
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        $operations = [];
+        foreach ($textAdsIds as $textAdId) {
+            $operations[] = self::removeAdProcess($textAdId, $adGroupId);
+        }
+        // Make the mutate request.
+        return $adGroupAdService->mutate($operations);
+    }
+
+    public static function removeAdProcess($textAdId, $adGroupId)
+    {
+        // Create base class ad to avoid setting type specific fields.
+        $ad = new \Ad();
+        $ad->id = $textAdId;
+        // Create ad group ad.
+        $adGroupAd = new \AdGroupAd();
+        $adGroupAd->adGroupId = $adGroupId;
+        $adGroupAd->ad = $ad;
+        // Create operation.
+        $operation = new \AdGroupAdOperation();
+        $operation->operand = $adGroupAd;
+        $operation->operator = 'REMOVE';
+        
+        return $operation;
+    }
 }
