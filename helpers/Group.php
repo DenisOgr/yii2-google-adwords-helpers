@@ -224,11 +224,47 @@ class Group {
 
         // Make the mutate request.
         return $adGroupService->mutate($operations);
+    }
 
-        // Display result.
-//        $adGroup = $result->value[0];
-//        printf("Ad group with ID '%s' has updated default bid '$%s'.\n", $adGroup->id,
-//            $adGroup->biddingStrategyConfiguration->bids[0]->bid->microAmount /
-//            \AdWordsConstants::MICROS_PER_DOLLAR);
+    /**
+     * Update AdGroup
+     * @param \AdWordsUser $user
+     * @param $adGroupId
+     * @param array $data
+     * @param array $options
+     * @return mixed
+     */
+    public static function update(\AdWordsUser $user, $adGroupId, array $data, array $options)
+    {
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupService', $options['version']);
+
+        // Create ad group using an existing ID.
+        $adGroup = new \AdGroup();
+        $adGroup->id = $adGroupId;
+
+        // Update the bid.
+        if (isset($data['bid'])) {
+            $bid = new \CpcBid();
+            $bid->bid =  new \Money($data['bid'] * \AdWordsConstants::MICROS_PER_DOLLAR);
+            $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
+            $biddingStrategyConfiguration->bids[] = $bid;
+            $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+        }
+
+        //Update the status
+        if (isset($data['status'])) {
+            $adGroup->status = $data['status'];
+        }
+
+        // Create operation.
+        $operation = new \AdGroupOperation();
+        $operation->operand = $adGroup;
+        $operation->operator = 'SET';
+
+        $operations = array($operation);
+
+        // Make the mutate request.
+        return $adGroupService->mutate($operations);
     }
 } 
