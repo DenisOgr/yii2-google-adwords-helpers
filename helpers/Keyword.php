@@ -16,6 +16,9 @@ class Keyword {
     const MATCH_TYPE_PHRASE = 'PHRASE';
     const MATCH_TYPE_BROAD  = 'BROAD';
     const MATCH_TYPE_EXACT  = 'EXACT';
+    
+    const STATUS_ENABLED  = 'ENABLED';
+    const STATUS_REMOVED  = 'REMOVED';
 
     const SERVICE = 'AdGroupCriterionService';
 
@@ -262,28 +265,31 @@ class Keyword {
      * @param \AdWordsUser $user
      * @return bool
      */
-    static function updateKeyword(array $keyword, $adGroupId, $adVersion, \AdWordsUser $user)
+    static function updateKeywords(array $keywords, $adGroupId, $adVersion, \AdWordsUser $user)
     {
         // Get the service, which loads the required classes.
         $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
-        // Create ad group criterion.
-        $adGroupCriterion = new \BiddableAdGroupCriterion();
-        $adGroupCriterion->adGroupId = $adGroupId;
-        // Create criterion using an existing ID. Use the base class Criterion
-        // instead of Keyword to avoid having to set keyword-specific fields.
-        if (isset($keyword['id'])) {
-            $adGroupCriterion->criterion = new \Criterion($keyword['id']);
+        $operations = [];
+        foreach ($keywords as $keyword) {
+            // Create ad group criterion.
+            $adGroupCriterion = new \BiddableAdGroupCriterion();
+            $adGroupCriterion->adGroupId = $adGroupId;
+            // Create criterion using an existing ID. Use the base class Criterion
+            // instead of Keyword to avoid having to set keyword-specific fields.
+            if (isset($keyword['id'])) {
+                $adGroupCriterion->criterion = new \Criterion($keyword['id']);
+            }
+            if (isset($keyword['status'])) {
+                $adGroupCriterion->userStatus = $keyword['status'];
+            }
+            // Update final URL.
+            //  $adGroupCriterion->finalUrls = array('http://www.example.com/new');
+            // Create operation.
+            $operation = new \AdGroupCriterionOperation();
+            $operation->operand = $adGroupCriterion;
+            $operation->operator = 'SET';
+            $operations[] = $operation;
         }
-        if (isset($keyword['status'])) {
-            $adGroupCriterion->userStatus = $keyword['status'];
-        }
-        // Update final URL.
-        //  $adGroupCriterion->finalUrls = array('http://www.example.com/new');
-        // Create operation.
-        $operation = new \AdGroupCriterionOperation();
-        $operation->operand = $adGroupCriterion;
-        $operation->operator = 'SET';
-        $operations = [$operation];
         // Make the mutate request.
         $result = $adGroupCriterionService->mutate($operations);
         // Display result.

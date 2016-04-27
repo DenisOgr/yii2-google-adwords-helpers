@@ -15,14 +15,16 @@ class Label {
 
     const STATUS_ENABLED = 'ENABLED';
 
-    public static function gelLabels($adVersion, \AdWordsUser $user) {
+    public static function gelLabels($adVersion, \AdWordsUser $user,  array $settings = []) {
         $labels = [];
 
+        $fields = !empty($settings['fields']) ? $settings['fields'] : ['LabelId', 'LabelName'];
+        
         // Get the service, which loads the required classes.
         $labelService = $user->GetService('LabelService', $adVersion);
         // Create selector.
         $selector = new \Selector();
-        $selector->fields = array('LabelId', 'LabelName');
+        $selector->fields = $fields;
         $selector->ordering[] = new \OrderBy('LabelName', 'ASCENDING');
         // Create paging controls.
         $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);

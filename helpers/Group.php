@@ -5,15 +5,14 @@
  * Date: 8/22/14
  * Time: 5:22 PM
  */
-
 namespace denisog\gah\helpers;
-
 
 use common\models\GoogleGroups;
 
-class Group {
-    public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName, $params = []) {
-
+class Group
+{
+    public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName, $params = [])
+    {
         // Get the service, which loads the required classes.
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
 
@@ -22,7 +21,9 @@ class Group {
         $adGroup = new \AdGroup();
         $adGroup->campaignId = $campaignId;
         $adGroup->name = $groupName;
-
+        // Set additional settings (optional).
+        $adGroup->status = 'ENABLED';
+        
         // Set bids (required).
         $bid = new \CpcBid();
         
@@ -31,6 +32,9 @@ class Group {
                 switch ($key) {
                     case 'bid':
                         $bid->bid = new \Money($val*1000000);
+                        break;
+                    case 'status':
+                        $adGroup->status = $val;
                         break;
 
                     default:
@@ -46,18 +50,13 @@ class Group {
         $biddingStrategyConfiguration->bids[] = $bid;
         $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
 
-        // Set additional settings (optional).
-        $adGroup->status = 'ENABLED';
-
         // Targetting restriction settings - these setting only affect serving
         // for the Display Network.
         $targetingSetting = new \TargetingSetting();
         // Restricting to serve ads that match your ad group placements.
-        $targetingSetting->details[] =
-            new \TargetingSettingDetail('PLACEMENT', TRUE);
+        $targetingSetting->details[] = new \TargetingSettingDetail('PLACEMENT', true);
         // Using your ad group verticals only for bidding.
-        $targetingSetting->details[] =
-            new \TargetingSettingDetail('VERTICAL', FALSE);
+        $targetingSetting->details[] = new \TargetingSettingDetail('VERTICAL', false);
         $adGroup->settings[] = $targetingSetting;
 
         // Create operation.
@@ -72,7 +71,8 @@ class Group {
         return $result->value;
     }
 
-    public static function getAdGroups($adVersion, \AdWordsUser $user, $campaignId, $adGroupId = null) {
+    public static function getAdGroups($adVersion, \AdWordsUser $user, $campaignId, $adGroupId = null)
+    {
         $adGroups = null;
 
         // Get the service, which loads the required classes.
@@ -91,8 +91,7 @@ class Group {
             // Display results.
             if (isset($page->entries)) {
                 foreach ($page->entries as $adGroup) {
-//                    $adGroups[] = $adGroup;
-                    if (is_null($adGroupId)){
+                    if (is_null($adGroupId)) {
                         $adGroups[] = ['id' => $adGroup->id, 'name' => $adGroup->name];
                     } elseif ($adGroup->id == $adGroupId) {
                         $adGroups = ['id' => $adGroup->id, 'name' => $adGroup->name];
@@ -108,7 +107,8 @@ class Group {
         return $adGroups;
     }
 
-    public static function addAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId, $listId) {
+    public static function addAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId, $listId)
+    {
         // Get the AdGroupCriterionService, which loads the required classes.
         $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
         // Create biddable ad group criterion for gender
@@ -127,12 +127,18 @@ class Group {
         $result = $adGroupCriterionService->mutate($operations);
         // Display results.
         foreach ($result->value as $adGroupCriterion) {
-            printf("Ad group criterion with ad group ID '%s', criterion ID '%s' " .
-                "and type '%s' was added.\n", $adGroupCriterion->adGroupId, $adGroupCriterion->criterion->id, $adGroupCriterion->criterion->CriterionType);
+            printf(
+                "Ad group criterion with ad group ID '%s', criterion ID '%s' " .
+                "and type '%s' was added.\n",
+                $adGroupCriterion->adGroupId,
+                $adGroupCriterion->criterion->id,
+                $adGroupCriterion->criterion->CriterionType
+            );
         }
     }
 
-    public static function updateAdGroupTarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $data) {
+    public static function updateAdGroupTarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $data)
+    {
         // Get the service, which loads the required classes.
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
 
@@ -159,7 +165,8 @@ class Group {
         echo("Ad group with ID " . $adGroup->id);
     }
 
-    public static function getAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId) {
+    public static function getAdGroupUserList($adVersion, \AdWordsUser $user, $adGroupId)
+    {
         $list = [];
 
         // Get the service, which loads the required classes.
@@ -267,4 +274,24 @@ class Group {
         // Make the mutate request.
         return $adGroupService->mutate($operations);
     }
-} 
+    
+    public static function remove($adVersion, array $adGroupIds, \AdWordsUser $user)
+    {
+        // Get the service, which loads the required classes.
+        $adGroupService = $user->GetService('AdGroupService', $adVersion);
+        $operations = [];
+        foreach ($adGroupIds as $adGroupId) {
+            // Create ad group with REMOVED status.
+            $adGroup = new \AdGroup();
+            $adGroup->id = $adGroupId;
+            $adGroup->status = 'REMOVED';
+            // Create operations.
+            $operation = new \AdGroupOperation();
+            $operation->operand = $adGroup;
+            $operation->operator = 'SET';
+            $operations[] = $operation;
+        }
+        // Make the mutate request.
+        return $adGroupService->mutate($operations);
+    }
+}
