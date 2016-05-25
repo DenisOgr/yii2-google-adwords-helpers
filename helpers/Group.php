@@ -36,6 +36,10 @@ class Group
                     case 'status':
                         $adGroup->status = $val;
                         break;
+                    
+                    case 'customBids': // Set 'enable custom bids' (for dsk)
+                        $adGroup->contentBidCriterionTypeGroup = 'KEYWORD';
+                        break;
 
                     default:
                         break;
@@ -257,6 +261,11 @@ class Group
             $biddingStrategyConfiguration = new \BiddingStrategyConfiguration();
             $biddingStrategyConfiguration->bids[] = $bid;
             $adGroup->biddingStrategyConfiguration = $biddingStrategyConfiguration;
+        }
+        
+        // Set 'enable custom bids' (for dsk)
+        if (isset($data['customBids'])) {
+            $adGroup->contentBidCriterionTypeGroup = 'KEYWORD';
         }
 
         //Update the status
