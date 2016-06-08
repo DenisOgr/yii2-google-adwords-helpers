@@ -11,6 +11,8 @@ use common\models\GoogleGroups;
 
 class Group
 {
+    const USER_CRITERION_STATUS_ENABLED = 'ENABLED';
+    
     public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName, $params = [])
     {
         // Get the service, which loads the required classes.
@@ -302,5 +304,55 @@ class Group
         }
         // Make the mutate request.
         return $adGroupService->mutate($operations);
+    }
+    
+    public static function getDsaGroups($adVersion, \AdWordsUser $user, array $settings = [])
+    {
+        //default settings
+        $fields = ['Status', 'AdGroupName', 'AdGroupId', 'BaseAdGroupId', 'BaseCampaignId', 'CriteriaType', 'Parameter'];
+        $orders = ['AdGroupId'];
+
+        // Get the service, which loads the required classes.
+        $adGroupCriterionService =
+            $user->GetService('AdGroupCriterionService', $adVersion);
+
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = $fields;
+
+        // Create predicates.
+        if (isset($settings['AdGroupId'])) {
+            $selector->predicates[] = new \Predicate('AdGroupId', 'IN', $settings['AdGroupId']);
+        }
+        
+        if (isset($settings['AdGroupStatus'])) {
+            $selector->predicates[] = new \Predicate('AdGroupStatus', 'IN', array(self::USER_CRITERION_STATUS_ENABLED));
+        }
+        
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+        $result = [];
+        do {
+            // Make the get request.
+            $page = $adGroupCriterionService->get($selector);
+
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $adGroupCriterion) {
+                    $data = get_object_vars($adGroupCriterion);
+                    if ($data['criterion']->CriterionType == $settings['CriterionType']) {
+                        $info['url'] = $data['criterion']->parameter->conditions[0]->argument;
+                        $info['campaignId'] = $data['baseCampaignId'];
+                        $info['adGroupId']   = $data['baseAdGroupId'];
+                        $result[] = $info;
+                    }
+                }
+            }
+
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+
+        return $result;
     }
 }
