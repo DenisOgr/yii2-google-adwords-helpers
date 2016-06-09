@@ -12,6 +12,7 @@ use common\models\GoogleGroups;
 class Group
 {
     const USER_CRITERION_STATUS_ENABLED = 'ENABLED';
+    const CRITERIONTYPE_WEBPAGE = 'WEBPAGE';
     
     public static function create($adVersion, \AdWordsUser $user, $campaignId, $groupName, $params = [])
     {
@@ -311,7 +312,7 @@ class Group
         //default settings
         $fields = ['Status', 'AdGroupName', 'AdGroupId', 'BaseAdGroupId', 'BaseCampaignId', 'CriteriaType', 'Parameter'];
         $orders = ['AdGroupId'];
-
+        
         // Get the service, which loads the required classes.
         $adGroupCriterionService =
             $user->GetService('AdGroupCriterionService', $adVersion);
@@ -329,6 +330,12 @@ class Group
             $selector->predicates[] = new \Predicate('AdGroupStatus', 'IN', array(self::USER_CRITERION_STATUS_ENABLED));
         }
         
+        if (isset($settings['BaseCampaignId'])) {
+            $selector->predicates[] = new \Predicate('BaseCampaignId', 'IN', $settings['BaseCampaignId']);
+        }
+        
+        $selector->predicates[] = new \Predicate('CriterionType', 'IN', [self::CRITERIONTYPE_WEBPAGE]);
+        
         // Create paging controls.
         $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
         $result = [];
@@ -341,10 +348,12 @@ class Group
                 foreach ($page->entries as $adGroupCriterion) {
                     $data = get_object_vars($adGroupCriterion);
                     if ($data['criterion']->CriterionType == $settings['CriterionType']) {
-                        $info['url'] = $data['criterion']->parameter->conditions[0]->argument;
-                        $info['campaignId'] = $data['baseCampaignId'];
-                        $info['adGroupId']   = $data['baseAdGroupId'];
-                        $result[] = $info;
+                        if (isset($data['criterion']->parameter->conditions[0]->argument)) {
+                            $info['url'] = $data['criterion']->parameter->conditions[0]->argument;
+                            $info['campaignId'] = $data['baseCampaignId'];
+                            $info['adGroupId']   = $data['baseAdGroupId'];
+                            $result[] = $info;
+                        }
                     }
                 }
             }
