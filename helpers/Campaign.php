@@ -19,7 +19,10 @@ class Campaign
         // Create paging controls.
         $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
         // Create predicates.
-        $selector->predicates[] = new \Predicate('Id', 'IN', $campaignIds);
+        
+        if ($campaignIds) {
+            $selector->predicates[] = new \Predicate('Id', 'IN', $campaignIds);
+        }
         $campaigns = [];
         do {
             // Make the get request.
