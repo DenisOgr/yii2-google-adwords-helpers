@@ -13,6 +13,12 @@ class TextAd
 {
 
     const MAX_LIMIT_FOR_QUERY = 2000;
+    const STATUS_PAUSED = 'PAUSED';
+    const STATUS_ENABLED = 'ENABLED';
+    const STATUS_DISABLED = 'DISABLED';
+    
+    const STATUS_REMOVE = 'REMOVE';
+    const STATUS_REMOVED = 'REMOVED';
 
     public static $FIELDS = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
 
@@ -233,4 +239,160 @@ class TextAd
         
         return $operation;
     }
+    
+    function createDsaAds($adVersion, \AdWordsUser $user, $adGroupId, $ads, $params = array())
+    {
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        $operations = array();
+        foreach ($ads as $ad) {
+            // Create text ad.
+            $textAd = new \DynamicSearchAd();
+            $textAd->description1 = $ad['description1'];
+            $textAd->description2 = $ad['description2'];
+            $textAd->displayUrl = $ad['displayUrl'];
+
+            // Create ad group ad.
+            $adGroupAd = new \AdGroupAd();
+            $adGroupAd->adGroupId = $adGroupId;
+            $adGroupAd->ad = $textAd;
+
+            // Set additional settings (optional).
+            $adGroupAd->status = isset($params['status']) ? $params['status'] : self::STATUS_PAUSED;
+
+            // Create operation.
+            $operation = new \AdGroupAdOperation();
+            $operation->operand = $adGroupAd;
+            $operation->operator = 'ADD';
+            $operations[] = $operation;
+        }
+        // Make the mutate request.
+        $result = $adGroupAdService->mutate($operations);
+        // Display results.
+        foreach ($result->value as $adGroupAd) {
+            printf("Text ad with headline '%s' and ID '%s' was added.\n", $adGroupAd->ad->headline, $adGroupAd->ad->id);
+        }
+    }
+    
+    function createDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $params = array())
+    {
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        
+        $autotarget = new \WebpageCondition();
+        $autotarget->operand =  'URL';
+        $autotarget->argument =  $target;
+        
+        $param = new \WebpageParameter();
+        $param->conditions = array($autotarget);
+        $param->criterionName = $target;
+        
+        $webpage = new \Webpage();
+        $webpage->parameter = $param;
+        
+        $bagc = new \BiddableAdGroupCriterion();
+        $bagc->adGroupId = $adGroupId;
+        $bagc->criterion = $webpage;
+        $bagc->userStatus = self::STATUS_ENABLED;
+        
+        $bsc = new \BiddingStrategyConfiguration();
+        
+        $criterionOperation = new \AdGroupCriterionOperation();
+        $criterionOperation->operator = 'ADD';
+        $criterionOperation->operand = $bagc;
+        
+        $criterionAdOperation = array($criterionOperation);
+        
+        $result = $adGroupCriterionService->mutate($criterionAdOperation);
+        return $result;
+    }
+
+    /**
+     * removeDsaAutotarget
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param type $adGroupId
+     * @param type $autotarget
+     * @param type $params
+     * @return type
+     */
+    function removeDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $autotarget, $params = array())
+    {
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        
+        $autotargetOld = new \WebpageCondition();
+        $autotargetOld->operand =  'URL';
+        $autotargetOld->argument =  $autotarget['url'];
+        
+        $paramOld = new \WebpageParameter();
+        $paramOld->conditions = array($autotargetOld);
+        $paramOld->criterionName = $autotarget['criterionName'];
+        
+        $webpageOld = new \Webpage();
+        $webpageOld->parameter = $paramOld;
+        $webpageOld->id = $autotarget['criterionId'];
+        
+        $bagcOld = new \BiddableAdGroupCriterion();
+        $bagcOld->adGroupId = $adGroupId;
+        $bagcOld->criterion = $webpageOld;
+        $bagcOld->userStatus = self::STATUS_REMOVED;
+        
+        $criterionOperationRm = new \AdGroupCriterionOperation();
+        $criterionOperationRm->operator = self::STATUS_REMOVE;
+        $criterionOperationRm->operand = $bagcOld;
+        
+        $criterionAdOperation = array($criterionOperationRm);
+        
+        $result = $adGroupCriterionService->mutate($criterionAdOperation);
+        return $result;
+    }
+    
+    /**
+     * getTextAds
+     * 
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param int $adGroupId
+     * @param array $params
+     */
+    function getTextAds($adVersion, \AdWordsUser $user, $adGroupId, $settings = array()) 
+    {
+        $ads = [];
+        
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        
+        $fields = !empty($settings['fields']) ? $settings['fields'] : ['Headline', 'Id'];
+        $statuses = !empty($settings['statuses']) 
+            ? $settings['statuses'] 
+            : [self::STATUS_PAUSED, self::STATUS_ENABLED, self::STATUS_DISABLED];
+
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = $fields;
+        $selector->ordering[] = new \OrderBy('Headline', 'ASCENDING');
+        // Create predicates.
+        $selector->predicates[] = new \Predicate('AdGroupId', 'IN', array($adGroupId));
+        // By default disabled ads aren't returned by the selector. To return them
+        // include the DISABLED status in a predicate.
+        $selector->predicates[] = new \Predicate('Status', 'IN', $statuses);
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+        do {
+            // Make the get request.
+            $page = $adGroupAdService->get($selector);
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $adGroupAd) {
+                    $ads[] = $adGroupAd;
+                }
+            } else {
+                print "No text ads were found.\n";
+            }
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+        
+        return $ads;
+    }
+
 }
