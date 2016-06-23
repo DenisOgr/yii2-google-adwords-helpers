@@ -63,14 +63,17 @@ class Group
         // Targetting restriction settings - these setting only affect serving
         // for the Display Network.
         $targetingSetting = new \TargetingSetting();
-        // Restricting to serve ads that match your ad group placements.
-        $targetPlacementFlag = true;
+
         if (isset($params['targetPlacementFlag'])) {
-            $targetPlacementFlag = $params['targetPlacementFlag'];
+            // Restricting to serve ads that match your ad group placements.
+            $targetingSetting->details[] = new \TargetingSettingDetail('PLACEMENT', $params['targetPlacementFlag']);
         }
-        $targetingSetting->details[] = new \TargetingSettingDetail('PLACEMENT', $targetPlacementFlag);
-        // Using your ad group verticals only for bidding.
-        $targetingSetting->details[] = new \TargetingSettingDetail('VERTICAL', false);
+        
+        if (isset($params['targetVerticalFlag'])) {
+            // Restricting to serve ads that match your ad group placements.
+            $targetingSetting->details[] = new \TargetingSettingDetail('VERTICAL', $params['targetVerticalFlag']);
+        }
+
         $adGroup->settings[] = $targetingSetting;
 
         // Create operation.

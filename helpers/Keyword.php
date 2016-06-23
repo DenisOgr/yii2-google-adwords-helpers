@@ -156,9 +156,12 @@ class Keyword {
 
 
     /**
-     * Get keywords by groups IDs
-     * @param AdWordsUser $user the user to run the example with
-     * @param string $adGroupId the id of the parent ad group
+     * getByGroups
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param array $adGroupId
+     * @param array $settings
+     * @return type
      */
     public static function getByGroups( $adVersion, \AdWordsUser $user,   array $adGroupId, array $settings = []) {
         //default settings
