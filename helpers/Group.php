@@ -341,8 +341,9 @@ class Group
             $selector->predicates[] = new \Predicate('AdGroupId', 'IN', $settings['AdGroupId']);
         }
         
+        $selector->predicates[] = new \Predicate('AdGroupStatus', 'IN', array(self::USER_CRITERION_STATUS_ENABLED));
         if (isset($settings['AdGroupStatus'])) {
-            $selector->predicates[] = new \Predicate('AdGroupStatus', 'IN', array(self::USER_CRITERION_STATUS_ENABLED));
+            $selector->predicates[] = new \Predicate('AdGroupStatus', 'IN', $settings['AdGroupStatus']);
         }
         
         if (isset($settings['BaseCampaignId'])) {
