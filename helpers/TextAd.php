@@ -240,6 +240,43 @@ class TextAd
         return $operation;
     }
     
+    /**
+     * Remove textAds from google adwords
+     * @param array $textAdsIds - textAd ids
+     * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @return bool
+     */
+    public static function updateAdsStatus($textAdsIds, $adGroupId, $adVersion, \AdWordsUser $user, $status)
+    {
+        if (empty($textAdsIds) || count($textAdsIds) > self::MAX_LIMIT_FOR_QUERY) {
+            return false;
+        }
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        
+        $operations = [];
+        foreach ($textAdsIds as $textAdId) {
+            $ad = new \Ad();
+            $ad->id = $textAdId;
+            // Create ad group ad.
+            $adGroupAd = new \AdGroupAd();
+            $adGroupAd->adGroupId = $adGroupId;
+            $adGroupAd->ad = $ad;
+            // Update the status.
+            $adGroupAd->status = $status;
+            // Create operation.
+            $operation = new \AdGroupAdOperation();
+            $operation->operand = $adGroupAd;
+            $operation->operator = 'SET';
+            
+            $operations[] = $operation;
+        }
+
+        // Make the mutate request.
+        return $adGroupAdService->mutate($operations);
+    }
+    
     function createDsaAds($adVersion, \AdWordsUser $user, $adGroupId, $ads, $params = array())
     {
         // Get the service, which loads the required classes.
@@ -370,6 +407,9 @@ class TextAd
         $selector = new \Selector();
         $selector->fields = $fields;
         $selector->ordering[] = new \OrderBy('Headline', 'ASCENDING');
+        if (isset($settings['ids'])) {
+            $selector->predicates[] = new \Predicate('Id', 'IN', $settings['ids']);
+        }
         // Create predicates.
         $selector->predicates[] = new \Predicate('AdGroupId', 'IN', array($adGroupId));
         // By default disabled ads aren't returned by the selector. To return them
