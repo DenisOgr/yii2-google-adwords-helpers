@@ -19,6 +19,9 @@ class TextAd
     
     const STATUS_REMOVE = 'REMOVE';
     const STATUS_REMOVED = 'REMOVED';
+    
+    const AD_TYPE_DEF = 'default';
+    const AD_TYPE_DSA = 'dsa';
 
     public static $FIELDS = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
 
@@ -30,7 +33,7 @@ class TextAd
      * @param \denisog\gah\models\AdWordsLocation $location
      * @return bool
      */
-    public static function createAds(array $textAds, $adGroupId, $adVersion, \AdWordsUser $user, $validate = true)
+    public static function createAds(array $textAds, $adGroupId, $adVersion, \AdWordsUser $user, $validate = true, $params = [])
     {
         require_once \Yii::getAlias(
             '@vendor/googleads/googleads-php-lib/src/Google/Api/Ads/Common/Util/ErrorUtils.php'
@@ -49,7 +52,7 @@ class TextAd
         );
         $operations = [];
         foreach ($textAds as $textAd) {
-            $operations[] = self::createAdProcess($textAd, $adGroupId);
+            $operations[] = self::createAdProcess($textAd, $adGroupId, $params);
         }
 
         try {
@@ -118,9 +121,23 @@ class TextAd
         return $items;
     }
 
-    public static function createAdProcess(array $textAd, $adGroupId)
+    public static function createAdProcess(
+            array $textAd,
+            $adGroupId,
+            $params = [])
     {
-        $newItem = new \TextAd();
+        $textAdType = isset($params['textAdType']) ? $params['textAdType'] : self::AD_TYPE_DEF;
+
+        switch ($textAdType) {
+            case self::AD_TYPE_DSA:
+                $newItem = new \DynamicSearchAd();
+                break;
+            
+            case self::AD_TYPE_DEF:
+                $newItem = new \TextAd();
+                break;
+        }
+                
         foreach (self::$FIELDS as $field) {
             if (isset($textAd[$field])) {
                 if ($field == 'finalUrl') {
@@ -276,41 +293,7 @@ class TextAd
         // Make the mutate request.
         return $adGroupAdService->mutate($operations);
     }
-    
-    function createDsaAds($adVersion, \AdWordsUser $user, $adGroupId, $ads, $params = array())
-    {
-        // Get the service, which loads the required classes.
-        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
-        $operations = array();
-        foreach ($ads as $ad) {
-            // Create text ad.
-            $textAd = new \DynamicSearchAd();
-            $textAd->description1 = $ad['description1'];
-            $textAd->description2 = $ad['description2'];
-            $textAd->displayUrl = $ad['displayUrl'];
-
-            // Create ad group ad.
-            $adGroupAd = new \AdGroupAd();
-            $adGroupAd->adGroupId = $adGroupId;
-            $adGroupAd->ad = $textAd;
-
-            // Set additional settings (optional).
-            $adGroupAd->status = isset($params['status']) ? $params['status'] : self::STATUS_PAUSED;
-
-            // Create operation.
-            $operation = new \AdGroupAdOperation();
-            $operation->operand = $adGroupAd;
-            $operation->operator = 'ADD';
-            $operations[] = $operation;
-        }
-        // Make the mutate request.
-        $result = $adGroupAdService->mutate($operations);
-        // Display results.
-        foreach ($result->value as $adGroupAd) {
-            printf("Text ad with headline '%s' and ID '%s' was added.\n", $adGroupAd->ad->headline, $adGroupAd->ad->id);
-        }
-    }
-    
+        
     function createDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $params = array())
     {
         $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
