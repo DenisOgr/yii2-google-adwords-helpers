@@ -294,7 +294,7 @@ class TextAd
         return $adGroupAdService->mutate($operations);
     }
         
-    function createDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $params = array())
+    public static function createDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $params = array())
     {
         $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
         
