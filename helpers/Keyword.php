@@ -106,7 +106,7 @@ class Keyword {
                         $keyword->criterion->text,
                         $keyword->criterion->id
                     );
-                    $items[] = $keyword->criterion->id;
+                    $items = $result->value;
                 }
             } else {
                 print "All the operations were invalid with non-exemptable errors.\n";
