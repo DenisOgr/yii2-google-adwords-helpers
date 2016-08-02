@@ -53,7 +53,7 @@ class ReportUtils  extends \ReportUtils{
      * @return bool|mixed
      * @throws \yii\console\Exception
      */
-    public static function DownloadReportWithAwql($reportQuery, $path = NULL,
+    public function DownloadReportWithAwql($reportQuery, $path = NULL,
                                                   \AdWordsUser $user, $reportFormat, array $options = NULL) {
         self::init();
 
@@ -62,7 +62,7 @@ class ReportUtils  extends \ReportUtils{
         do {
             try{
                 $throwException = true;
-                \ReportUtils::DownloadReportWithAwql($reportQuery, $path,  $user, $reportFormat, $options);
+                parent::DownloadReportWithAwql($reportQuery, $path,  $user, $reportFormat, $options);
 
             } catch(\Exception $e){
 
@@ -73,7 +73,7 @@ class ReportUtils  extends \ReportUtils{
                  * 8 - this exception: Undefined property: stdClass::$ApiError
                  *
                  * */
-                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 0 || $e->getCode() == 8) {
+                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 8) {
                     $lastIteration++;
 
                     if ($lastIteration < ReportUtils::ATTEMPS) {
