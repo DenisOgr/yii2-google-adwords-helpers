@@ -73,7 +73,7 @@ class ReportUtils  extends \ReportUtils{
                  * 8 - this exception: Undefined property: stdClass::$ApiError
                  *
                  * */
-                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 8) {
+                if (($e->getCode() >= 500 && $e->getCode() < 600) || $e->getCode() == 0 || $e->getCode() == 8) {
                     $lastIteration++;
 
                     if ($lastIteration < ReportUtils::ATTEMPS) {
@@ -94,4 +94,4 @@ class ReportUtils  extends \ReportUtils{
 
         return true;
     }
-} 
+}
