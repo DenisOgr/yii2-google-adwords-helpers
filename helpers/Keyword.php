@@ -33,7 +33,7 @@ class Keyword {
      * @param \AdWordsUser $user
      * @param \denisog\gah\models\AdWordsLocation $location
      * @param array $settings
-     * @return bool
+     * @return array
      */
     static public function create(array $keywords, $adVersion, \AdWordsUser $user,  \denisog\gah\models\AdWordsLocation $location, array $settings) {
 
@@ -42,7 +42,7 @@ class Keyword {
         );
         
         $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
-
+        $items = [];
         foreach (array_chunk($keywords, Keyword::MAX_LIMIT_FOR_QUERY) as $keywordItems) {
 
             $operations =[];
@@ -94,7 +94,6 @@ class Keyword {
                 }
             }
             
-            $items = [];
             if (sizeof($operations) > 0) {
                 // Retry the mutate request.
                 // Get the service, which loads the required classes.
@@ -107,14 +106,14 @@ class Keyword {
                         $keyword->criterion->text,
                         $keyword->criterion->id
                     );
-                    $items[] = $keyword->criterion;
+                    $items = $result->value;
                 }
             } else {
                 print "All the operations were invalid with non-exemptable errors.\n";
                 return [];
             }
         }
-        return true;
+        return $items;
     }
     
     public static function createProcess($text, \denisog\gah\models\AdWordsLocation $location, array $settings)
@@ -156,9 +155,12 @@ class Keyword {
 
 
     /**
-     * Get keywords by groups IDs
-     * @param AdWordsUser $user the user to run the example with
-     * @param string $adGroupId the id of the parent ad group
+     * getByGroups
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param array $adGroupId
+     * @param array $settings
+     * @return type
      */
     public static function getByGroups( $adVersion, \AdWordsUser $user,   array $adGroupId, array $settings = []) {
         //default settings

@@ -13,6 +13,15 @@ class TextAd
 {
 
     const MAX_LIMIT_FOR_QUERY = 2000;
+    const STATUS_PAUSED = 'PAUSED';
+    const STATUS_ENABLED = 'ENABLED';
+    const STATUS_DISABLED = 'DISABLED';
+    
+    const STATUS_REMOVE = 'REMOVE';
+    const STATUS_REMOVED = 'REMOVED';
+    
+    const AD_TYPE_DEF = 'default';
+    const AD_TYPE_DSA = 'dsa';
 
     public static $FIELDS = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
 
@@ -24,7 +33,7 @@ class TextAd
      * @param \denisog\gah\models\AdWordsLocation $location
      * @return bool
      */
-    public static function createAds(array $textAds, $adGroupId, $adVersion, \AdWordsUser $user, $validate = true)
+    public static function createAds(array $textAds, $adGroupId, $adVersion, \AdWordsUser $user, $validate = true, $params = [])
     {
         require_once \Yii::getAlias(
             '@vendor/googleads/googleads-php-lib/src/Google/Api/Ads/Common/Util/ErrorUtils.php'
@@ -43,7 +52,7 @@ class TextAd
         );
         $operations = [];
         foreach ($textAds as $textAd) {
-            $operations[] = self::createAdProcess($textAd, $adGroupId);
+            $operations[] = self::createAdProcess($textAd, $adGroupId, $params);
         }
 
         try {
@@ -112,9 +121,23 @@ class TextAd
         return $items;
     }
 
-    public static function createAdProcess(array $textAd, $adGroupId)
+    public static function createAdProcess(
+            array $textAd,
+            $adGroupId,
+            $params = [])
     {
-        $newItem = new \TextAd();
+        $textAdType = isset($params['textAdType']) ? $params['textAdType'] : self::AD_TYPE_DEF;
+
+        switch ($textAdType) {
+            case self::AD_TYPE_DSA:
+                $newItem = new \DynamicSearchAd();
+                break;
+            
+            case self::AD_TYPE_DEF:
+                $newItem = new \TextAd();
+                break;
+        }
+                
         foreach (self::$FIELDS as $field) {
             if (isset($textAd[$field])) {
                 if ($field == 'finalUrl') {
@@ -233,4 +256,166 @@ class TextAd
         
         return $operation;
     }
+    
+    /**
+     * Remove textAds from google adwords
+     * @param array $textAdsIds - textAd ids
+     * @param $adVersion - version
+     * @param \AdWordsUser $user
+     * @return bool
+     */
+    public static function updateAdsStatus($textAdsIds, $adGroupId, $adVersion, \AdWordsUser $user, $status)
+    {
+        if (empty($textAdsIds) || count($textAdsIds) > self::MAX_LIMIT_FOR_QUERY) {
+            return false;
+        }
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        
+        $operations = [];
+        foreach ($textAdsIds as $textAdId) {
+            $ad = new \Ad();
+            $ad->id = $textAdId;
+            // Create ad group ad.
+            $adGroupAd = new \AdGroupAd();
+            $adGroupAd->adGroupId = $adGroupId;
+            $adGroupAd->ad = $ad;
+            // Update the status.
+            $adGroupAd->status = $status;
+            // Create operation.
+            $operation = new \AdGroupAdOperation();
+            $operation->operand = $adGroupAd;
+            $operation->operator = 'SET';
+            
+            $operations[] = $operation;
+        }
+
+        // Make the mutate request.
+        return $adGroupAdService->mutate($operations);
+    }
+        
+    public static function createDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $target, $params = array())
+    {
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        
+        $autotarget = new \WebpageCondition();
+        $autotarget->operand =  'URL';
+        $autotarget->argument =  $target;
+        
+        $param = new \WebpageParameter();
+        $param->conditions = array($autotarget);
+        $param->criterionName = $target;
+        
+        $webpage = new \Webpage();
+        $webpage->parameter = $param;
+        
+        $bagc = new \BiddableAdGroupCriterion();
+        $bagc->adGroupId = $adGroupId;
+        $bagc->criterion = $webpage;
+        $bagc->userStatus = self::STATUS_ENABLED;
+        
+        $bsc = new \BiddingStrategyConfiguration();
+        
+        $criterionOperation = new \AdGroupCriterionOperation();
+        $criterionOperation->operator = 'ADD';
+        $criterionOperation->operand = $bagc;
+        
+        $criterionAdOperation = array($criterionOperation);
+        
+        $result = $adGroupCriterionService->mutate($criterionAdOperation);
+        return $result;
+    }
+
+    /**
+     * removeDsaAutotarget
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param type $adGroupId
+     * @param type $autotarget
+     * @param type $params
+     * @return type
+     */
+    function removeDsaAutotarget($adVersion, \AdWordsUser $user, $adGroupId, $autotarget, $params = array())
+    {
+        $adGroupCriterionService = $user->GetService('AdGroupCriterionService', $adVersion);
+        
+        $autotargetOld = new \WebpageCondition();
+        $autotargetOld->operand =  'URL';
+        $autotargetOld->argument =  $autotarget['url'];
+        
+        $paramOld = new \WebpageParameter();
+        $paramOld->conditions = array($autotargetOld);
+        $paramOld->criterionName = $autotarget['criterionName'];
+        
+        $webpageOld = new \Webpage();
+        $webpageOld->parameter = $paramOld;
+        $webpageOld->id = $autotarget['criterionId'];
+        
+        $bagcOld = new \BiddableAdGroupCriterion();
+        $bagcOld->adGroupId = $adGroupId;
+        $bagcOld->criterion = $webpageOld;
+        $bagcOld->userStatus = self::STATUS_REMOVED;
+        
+        $criterionOperationRm = new \AdGroupCriterionOperation();
+        $criterionOperationRm->operator = self::STATUS_REMOVE;
+        $criterionOperationRm->operand = $bagcOld;
+        
+        $criterionAdOperation = array($criterionOperationRm);
+        
+        $result = $adGroupCriterionService->mutate($criterionAdOperation);
+        return $result;
+    }
+    
+    /**
+     * getTextAds
+     * 
+     * @param type $adVersion
+     * @param \AdWordsUser $user
+     * @param int $adGroupId
+     * @param array $params
+     */
+    function getTextAds($adVersion, \AdWordsUser $user, $adGroupId, $settings = array()) 
+    {
+        $ads = [];
+        
+        // Get the service, which loads the required classes.
+        $adGroupAdService = $user->GetService('AdGroupAdService', $adVersion);
+        
+        $fields = !empty($settings['fields']) ? $settings['fields'] : ['Headline', 'Id'];
+        $statuses = !empty($settings['statuses']) 
+            ? $settings['statuses'] 
+            : [self::STATUS_PAUSED, self::STATUS_ENABLED, self::STATUS_DISABLED];
+
+        // Create selector.
+        $selector = new \Selector();
+        $selector->fields = $fields;
+        $selector->ordering[] = new \OrderBy('Headline', 'ASCENDING');
+        if (isset($settings['ids'])) {
+            $selector->predicates[] = new \Predicate('Id', 'IN', $settings['ids']);
+        }
+        // Create predicates.
+        $selector->predicates[] = new \Predicate('AdGroupId', 'IN', array($adGroupId));
+        // By default disabled ads aren't returned by the selector. To return them
+        // include the DISABLED status in a predicate.
+        $selector->predicates[] = new \Predicate('Status', 'IN', $statuses);
+        // Create paging controls.
+        $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
+        do {
+            // Make the get request.
+            $page = $adGroupAdService->get($selector);
+            // Display results.
+            if (isset($page->entries)) {
+                foreach ($page->entries as $adGroupAd) {
+                    $ads[] = $adGroupAd;
+                }
+            } else {
+                print "No text ads were found.\n";
+            }
+            // Advance the paging index.
+            $selector->paging->startIndex += \AdWordsConstants::RECOMMENDED_PAGE_SIZE;
+        } while ($page->totalNumEntries > $selector->paging->startIndex);
+        
+        return $ads;
+    }
+
 }

@@ -26,6 +26,9 @@ class Group
         $adGroup->name = $groupName;
         // Set additional settings (optional).
         $adGroup->status = 'ENABLED';
+        if (isset($params['status'])) {
+            $adGroup->status = $params['status'];
+        }
         
         // Set bids (required).
         $bid = new \CpcBid();
@@ -60,10 +63,17 @@ class Group
         // Targetting restriction settings - these setting only affect serving
         // for the Display Network.
         $targetingSetting = new \TargetingSetting();
-        // Restricting to serve ads that match your ad group placements.
-        $targetingSetting->details[] = new \TargetingSettingDetail('PLACEMENT', true);
-        // Using your ad group verticals only for bidding.
-        $targetingSetting->details[] = new \TargetingSettingDetail('VERTICAL', false);
+
+        if (isset($params['targetPlacementFlag'])) {
+            // Restricting to serve ads that match your ad group placements.
+            $targetingSetting->details[] = new \TargetingSettingDetail('PLACEMENT', $params['targetPlacementFlag']);
+        }
+        
+        if (isset($params['targetVerticalFlag'])) {
+            // Restricting to serve ads that match your ad group placements.
+            $targetingSetting->details[] = new \TargetingSettingDetail('VERTICAL', $params['targetVerticalFlag']);
+        }
+
         $adGroup->settings[] = $targetingSetting;
 
         // Create operation.
@@ -86,7 +96,7 @@ class Group
         $adGroupService = $user->GetService('AdGroupService', $adVersion);
         // Create selector.
         $selector = new \Selector();
-        $selector->fields = array('Id', 'Name');
+        $selector->fields = array('Id', 'Name', 'Status');
         $selector->ordering[] = new \OrderBy('Name', 'ASCENDING');
         // Create predicates.
         $selector->predicates[] = new \Predicate('CampaignId', 'IN', array($campaignId));
@@ -99,9 +109,17 @@ class Group
             if (isset($page->entries)) {
                 foreach ($page->entries as $adGroup) {
                     if (is_null($adGroupId)) {
-                        $adGroups[] = ['id' => $adGroup->id, 'name' => $adGroup->name];
+                        $adGroups[] = [
+                            'id' => $adGroup->id,
+                            'name' => $adGroup->name,
+                            'status' => $adGroup->status,
+                        ];
                     } elseif ($adGroup->id == $adGroupId) {
-                        $adGroups = ['id' => $adGroup->id, 'name' => $adGroup->name];
+                        $adGroups = [
+                            'id' => $adGroup->id,
+                            'name' => $adGroup->name,
+                            'status' => $adGroup->status,
+                        ];
                         break;
                     }
                 }
@@ -336,6 +354,10 @@ class Group
         
         $selector->predicates[] = new \Predicate('CriterionType', 'IN', [self::CRITERIONTYPE_WEBPAGE]);
         
+        if (isset($settings['Statuses'])) {
+            $selector->predicates[] = new \Predicate('Status', 'IN', $settings['Statuses']);
+        }
+        
         // Create paging controls.
         $selector->paging = new \Paging(0, \AdWordsConstants::RECOMMENDED_PAGE_SIZE);
         $result = [];
@@ -350,6 +372,8 @@ class Group
                     if ($data['criterion']->CriterionType == $settings['CriterionType']) {
                         if (isset($data['criterion']->parameter->conditions[0]->argument)) {
                             $info['url'] = $data['criterion']->parameter->conditions[0]->argument;
+                            $info['criterionName']   = $data['criterion']->parameter->criterionName;
+                            $info['criterionId']   = $data['criterion']->id;
                             $info['campaignId'] = $data['baseCampaignId'];
                             $info['adGroupId']   = $data['baseAdGroupId'];
                             $result[] = $info;
