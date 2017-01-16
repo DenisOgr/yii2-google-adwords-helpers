@@ -187,7 +187,7 @@ class TextAd
 
     public static function updateAdProcess(array $textAd, $adGroupId = false)
     {
-        $item = new \TextAd();
+        $item = new \Ad();
         foreach (self::$FIELDS as $field) {
             if (isset($textAd[$field])) {
                 if ($field == 'status') {
