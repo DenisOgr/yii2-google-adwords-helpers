@@ -29,6 +29,7 @@ class TextAd
         'headline',
         'headlinePart1',
         'headlinePart2',
+        'description',
         'description1',
         'description2',
         'displayUrl',
