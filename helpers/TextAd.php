@@ -22,8 +22,22 @@ class TextAd
     
     const AD_TYPE_DEF = 'default';
     const AD_TYPE_DSA = 'dsa';
+    const AD_TYPE_EXP = 'expanded';
 
-    public static $FIELDS = ['id', 'headline', 'description1', 'description2', 'displayUrl', 'finalUrl', 'status'];
+    public static $FIELDS = [
+        'id',
+        'headline',
+        'headlinePart1',
+        'headlinePart2',
+        'description',
+        'description1',
+        'description2',
+        'displayUrl',
+        'finalUrl',
+        'path1',
+        'path2',
+        'status'
+    ];
 
     /**
      * Create (send) textAds to google adwords
@@ -52,6 +66,9 @@ class TextAd
         );
         $operations = [];
         foreach ($textAds as $textAd) {
+            if (isset($textAd['textAdType'])) {
+                $params['textAdType'] = $textAd['textAdType'];
+            }
             $operations[] = self::createAdProcess($textAd, $adGroupId, $params);
         }
 
@@ -135,6 +152,10 @@ class TextAd
             
             case self::AD_TYPE_DEF:
                 $newItem = new \TextAd();
+                break;
+
+            case self::AD_TYPE_EXP:
+                $newItem = new \ExpandedTextAd();
                 break;
         }
                 
