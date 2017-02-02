@@ -19,8 +19,7 @@ class TextAd
     
     const STATUS_REMOVE = 'REMOVE';
     const STATUS_REMOVED = 'REMOVED';
-    
-    const AD_TYPE_DEF = 'default';
+
     const AD_TYPE_DSA = 'dsa';
     const AD_TYPE_EXP = 'expanded';
 
@@ -87,8 +86,8 @@ class TextAd
                     $operationIndex = ErrorUtils::GetSourceOperationIndex($error);
                     $operation = $operations[$operationIndex];
                     printf(
-                        "Ad with headline '%s' violated %s policy '%s'.\n",
-                        $operation->operand->ad->headline,
+                        "Ad with headlinePart1 '%s' violated %s policy '%s'.\n",
+                        $operation->operand->ad->headlinePart1,
                         $error->isExemptable ? 'exemptable' : 'non-exemptable',
                         $error->externalPolicyName
                     );
@@ -124,8 +123,8 @@ class TextAd
             // Display results.
             foreach ($result->value as $adGroupAd) {
                 printf(
-                    "Text ad with headline '%s' and ID '%s' was added.\n",
-                    $adGroupAd->ad->headline,
+                    "Text ad with headlinePart1 '%s' and ID '%s' was added.\n",
+                    $adGroupAd->ad->headlinePart1,
                     $adGroupAd->ad->id
                 );
                 $items[] = $adGroupAd->ad;
@@ -143,15 +142,11 @@ class TextAd
             $adGroupId,
             $params = [])
     {
-        $textAdType = isset($params['textAdType']) ? $params['textAdType'] : self::AD_TYPE_DEF;
+        $textAdType = isset($params['textAdType']) ? $params['textAdType'] : self::AD_TYPE_EXP;
 
         switch ($textAdType) {
             case self::AD_TYPE_DSA:
                 $newItem = new \DynamicSearchAd();
-                break;
-            
-            case self::AD_TYPE_DEF:
-                $newItem = new \TextAd();
                 break;
 
             case self::AD_TYPE_EXP:
