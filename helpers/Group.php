@@ -107,6 +107,7 @@ class Group
             $page = $adGroupService->get($selector);
             // Display results.
             if (isset($page->entries)) {
+                print_r($page->entries);
                 foreach ($page->entries as $adGroup) {
                     if (is_null($adGroupId)) {
                         $adGroups[] = [
